@@ -36,7 +36,7 @@ function update_script() {
 
 start
 build_container
-pct exec "$CTID" -- passwd -d root
+pct exec "$CTID" -- bash -c "mkdir -p /etc/systemd/system/container-getty@.service.d && printf '[Service]\nExecStart=\nExecStart=-/sbin/agetty --autologin root --noclear %I \$TERM\n' > /etc/systemd/system/container-getty@.service.d/autologin.conf"
 
 # Ask install mode on the HOST (has a real terminal)
 echo ""
