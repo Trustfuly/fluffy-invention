@@ -82,9 +82,9 @@ rm -f /etc/nginx/sites-enabled/default
 
 if [[ "$INSTALL_MODE" == "1" ]]; then
     printf "Enter domain (e.g. secrets.example.com): "
-    read -r APP_DOMAIN </dev/tty
+    APP_DOMAIN="${APP_DOMAIN:-}"
     printf "Enter email for Let's Encrypt notices:   "
-    read -r APP_EMAIL </dev/tty
+    APP_EMAIL="${APP_EMAIL:-}"
 
     [[ -z "$APP_DOMAIN" || -z "$APP_EMAIL" ]] && msg_error "Domain and email are required."
 
