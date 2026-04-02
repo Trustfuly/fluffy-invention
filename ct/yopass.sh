@@ -16,61 +16,31 @@ var_os="debian"
 var_version="12"
 var_unprivileged="1"
 
-# Override install URL to use our own repo instead of community-scripts
+# URL to your NEW install script
 INSTALL_URL="https://raw.githubusercontent.com/Trustfuly/fluffy-invention/main/install/yopass-install.sh"
 
-# App Output & Base Settings
 header_info "$APP"
 base_settings
-
-# Core
 variables
 color
 catch_errors
 
 function update_script() {
-  header_info
-  check_container_storage
-  check_container_resources
-
-  if [[ ! -f /usr/local/bin/yopass-ng ]]; then
-    msg_error "No ${APP} installation found!"
+    header_info
+    if [[ ! -f /usr/local/bin/yopass-server ]]; then
+        msg_error "No ${APP} installation found!"
+        exit
+    fi
+    msg_info "Update logic should be handled by re-running the installer."
     exit
-  fi
-
-  RELEASE=$(curl -fsSL https://api.github.com/repos/paepckehh/yopass-ng/releases/latest \
-    | grep "tag_name" | awk '{print substr($2, 3, length($2)-4)}')
-
-  if [[ ! -f /opt/yopass_version.txt ]] || [[ "${RELEASE}" != "$(cat /opt/yopass_version.txt)" ]]; then
-    msg_info "Updating ${APP} to v${RELEASE}"
-    ARCH="amd64"
-    [[ "$(uname -m)" == "aarch64" ]] && ARCH="arm64"
-    curl -fsSL "https://github.com/paepckehh/yopass-ng/releases/download/v${RELEASE}/yopass-ng-linux_${ARCH}_${RELEASE}.tar.gz" \
-      -o /tmp/yopass-ng.tar.gz
-    systemctl stop yopass
-    tar -xzf /tmp/yopass-ng.tar.gz -C /tmp/
-    mv /tmp/yopass-ng /usr/local/bin/yopass-ng
-    chmod +x /usr/local/bin/yopass-ng
-    rm -f /tmp/yopass-ng.tar.gz
-    echo "${RELEASE}" >/opt/yopass_version.txt
-    systemctl start yopass
-    msg_ok "Updated ${APP} to v${RELEASE}"
-  else
-    msg_ok "No update required. ${APP} is already at v${RELEASE}"
-  fi
-  exit
 }
 
 start
 build_container
 
-# Run our own install script (fixed execution method)
-msg_info "Running Yopass installer"
-lxc-attach -n "$CTID" -- bash -c "curl -fsSL ${INSTALL_URL} | bash"
-
-description
+msg_info "Starting Yopass installation inside the container..."
+# Using -t for interactive menu support
+lxc-attach -n "$CTID" -- bash -c "$(curl -sSL ${INSTALL_URL})"
 
 msg_ok "Completed Successfully!\n"
-echo -e "${CREATING}${GN}${APP} setup has been successfully initialized!${CL}"
-echo -e "${INFO}${YW} Access it using the following URL:${CL}"
-echo -e "${TAB}${GATEWAY}${BGN}https://${IP}${CL}"
+echo -e "${GN}${APP} setup has been successfully initialized!${CL}"
