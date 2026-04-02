@@ -170,10 +170,28 @@ EOF
     ln -sf /etc/nginx/sites-available/yopass /etc/nginx/sites-enabled/yopass
     rm -f /etc/nginx/sites-enabled/default
     nginx -t && systemctl restart nginx
-    msg_ok "Installation complete!"
-    echo ""
-    echo "  ✅  Yopass is available at: http://$(hostname -I | awk '{print $1}')"
-    echo "  ℹ️   Point your reverse proxy to: http://$(hostname -I | awk '{print $1}'):80"
+ 
+    IP=$(hostname -I | awk '{print $1}')
+ 
+    clear
+    echo -e "\e[32m"
+    echo "    ╔══════════════════════════════════════════════════════════╗"
+    echo "    ║          ✅  Yopass installed successfully!              ║"
+    echo "    ╠══════════════════════════════════════════════════════════╣"
+    printf "  ║   🌐  URL      : http://%-34s ║\n" "${IP}"               ║
+    printf "  ║   🔁  Proxy to : http://%-31s ║\n" "${IP}:80"            ║
+    echo "    ║   🔒  TLS      : handled by your reverse proxy           ║"
+    echo "    ╠══════════════════════════════════════════════════════════╣"
+    echo "    ║   Service management:                                    ║"
+    echo "    ║     systemctl status yopass                              ║"
+    echo "    ║     systemctl restart yopass                             ║"
+    echo "    ╠══════════════════════════════════════════════════════════╣"
+    echo "    ║   Config files:                                          ║"
+    echo "    ║     /etc/nginx/sites-available/yopass                    ║"
+    echo "    ║     /etc/systemd/system/yopass.service                   ║"
+    echo "    ║     /etc/memcached.conf                                  ║"
+    echo "    ╚══════════════════════════════════════════════════════════╝"
+    echo -e "\e[0m"
 else
     msg_error "Invalid selection. Please enter 1 or 2."
 fi
