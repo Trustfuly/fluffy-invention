@@ -64,9 +64,9 @@ function update_script() {
 start
 build_container
 
-# Run our own install script instead of the community-scripts one
+# Run our own install script (fixed execution method)
 msg_info "Running Yopass installer"
-lxc-attach -n "$CTID" -- bash -c "$(curl -fsSL ${INSTALL_URL})"
+lxc-attach -n "$CTID" -- bash -c "curl -fsSL ${INSTALL_URL} | bash"
 
 description
 
