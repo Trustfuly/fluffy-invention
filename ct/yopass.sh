@@ -7,7 +7,7 @@ source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxV
 # Source: https://github.com/paepckehh/yopass-ng
 
 # App Default Values
-APP="Yopass-NG"
+APP="Yopass"
 var_tags="security;secrets"
 var_cpu="1"
 var_ram="256"
