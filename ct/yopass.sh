@@ -36,6 +36,7 @@ function update_script() {
 
 start
 build_container
+pct exec "$CTID" -- passwd -d root
 pct exec "$CTID" -- bash -c "mkdir -p /etc/systemd/system/container-getty@.service.d && cat > /etc/systemd/system/container-getty@.service.d/autologin.conf << 'EOF'
 [Service]
 ExecStart=
