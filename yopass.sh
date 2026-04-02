@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/build.func)
 
-# Copyright (c) 2024 community-scripts ORG
-# Author: community
-# License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
+# Copyright (c) 2024 Trustfuly
+# Author: Trustfuly (https://github.com/Trustfuly)
+# License: MIT | https://github.com/Trustfuly/fluffy-invention/raw/main/LICENSE
 # Source: https://github.com/jhaals/yopass
 
 # App Default Values
@@ -31,11 +31,13 @@ function update_script() {
   check_container_resources
 
   if [[ ! -f /usr/local/bin/yopass-server ]]; then
-    msg_error "No ${APP} Installation Found!"
+    msg_error "No ${APP} installation found!"
     exit
   fi
 
-  RELEASE=$(curl -fsSL https://api.github.com/repos/jhaals/yopass/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3)}')
+  RELEASE=$(curl -fsSL https://api.github.com/repos/jhaals/yopass/releases/latest \
+    | grep "tag_name" | awk '{print substr($2, 2, length($2)-3)}')
+
   if [[ ! -f /opt/yopass_version.txt ]] || [[ "${RELEASE}" != "$(cat /opt/yopass_version.txt)" ]]; then
     msg_info "Updating ${APP} to ${RELEASE}"
 
