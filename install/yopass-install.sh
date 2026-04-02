@@ -22,7 +22,8 @@ echo "1) Public (Standalone with Certbot/SSL)"
 echo "2) Behind Proxy (Nginx Proxy Manager / NPM)"
 echo "==========================================="
 # Фікс для інтерактивного меню всередині LXC
-read -p "Select option [1-2]: " INSTALL_MODE < /dev/tty
+printf "Select option [1-2]: "
+read -r INSTALL_MODE </dev/tty
 
 msg_info "Installing core dependencies..."
 apt-get update -qq && apt-get install -y -qq curl wget nginx memcached openssl
