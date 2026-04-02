@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 # Copyright (c) 2024 Trustfuly
 # Author: Trustfuly (https://github.com/Trustfuly)
 # License: MIT | https://github.com/Trustfuly/fluffy-invention/raw/main/LICENSE
@@ -8,7 +6,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# --- Configuration ---
 GITHUB_USER="Trustfuly"
 REPO="fluffy-invention"
 RAW_URL="https://raw.githubusercontent.com/${GITHUB_USER}/${REPO}/main"
@@ -17,22 +14,14 @@ msg_info()  { echo -e "\e[34m[INFO]\e[0m $1"; }
 msg_ok()    { echo -e "\e[32m[OK]\e[0m   $1"; }
 msg_error() { echo -e "\e[31m[ERROR]\e[0m $1"; exit 1; }
 
- # --- Installation Mode Menu ---
 clear
 echo "==========================================="
 echo "   Yopass Installation Mode Selection      "
 echo "==========================================="
 echo "1) Public (Standalone with Certbot/SSL)"
-echo "   - For direct internet connection"
-echo "   - Automatically obtains SSL certificate"
-echo ""
 echo "2) Behind Proxy (Nginx Proxy Manager / NPM)"
-echo "   - For use with an external proxy server"
-echo "   - Container runs on HTTP (Port 80)"
 echo "==========================================="
 read -p "Select option [1-2]: " INSTALL_MODE
-
-# --- Core Installation Steps ---
 
 msg_info "Installing core dependencies..."
 apt-get update -qq
@@ -73,31 +62,21 @@ EOF
 systemctl daemon-reload
 systemctl enable --now yopass
 
- # --- Mode-Specific Configuration ---
- 
 if [[ "$INSTALL_MODE" == "1" ]]; then
-    # MODE 1: PUBLIC STANDALONE
-    read -rp "Enter domain (e.g., secrets.domain.com): " APP_DOMAIN
-    read -rp "Enter email (for Let's Encrypt notices): " APP_EMAIL
-     
-    if [[ -z "$APP_DOMAIN" || -z "$APP_EMAIL" ]]; then
-    msg_error "Domain and Email are required for Standalone mode."
-    fi
- 
-    msg_info "Installing Certbot..."
-    apt-get install -y -qq certbot python3-certbot-nginx
-     
-    cat >/etc/nginx/sites-available/yopass <<'EOF'
+read -rp "Enter domain (e.g., secrets.domain.com): " APP_DOMAIN
+read -rp "Enter email (for Let's Encrypt notices): " APP_EMAIL
+if [[ -z "$APP_DOMAIN" || -z "$APP_EMAIL" ]]; then
+msg_error "Domain and Email are required for Standalone mode."
+fi
+msg_info "Installing Certbot..."
+apt-get install -y -qq certbot python3-certbot-nginx
+cat >/etc/nginx/sites-available/yopass <<'EOF'
 server {
     listen 80;
-    server_name _;
+    server_name $APP_DOMAIN;
     root /var/www/yopass;
     index index.html;
-
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-    
+    location / { try_files $uri $uri/ /index.html; }
     location /api/ {
         proxy_pass http://127.0.0.1:1337;
         proxy_set_header Host $host;
@@ -107,30 +86,21 @@ server {
     }
 }
 EOF
-    ln -sf /etc/nginx/sites-available/yopass /etc/nginx/sites-enabled/yopass
-    rm -f /etc/nginx/sites-enabled/default
-    systemctl restart nginx
-     
-    msg_info "Requesting SSL certificate from Let's Encrypt..."
-    certbot --nginx --non-interactive --agree-tos --email "$APP_EMAIL" -d "$APP_DOMAIN" --redirect
-     
-    msg_ok "Installation complete! Access your Yopass at: https://$APP_DOMAIN"
+ln -sf /etc/nginx/sites-available/yopass /etc/nginx/sites-enabled/yopass
+rm -f /etc/nginx/sites-enabled/default
+systemctl restart nginx
+msg_info "Requesting SSL certificate..."
+certbot --nginx --non-interactive --agree-tos --email "$APP_EMAIL" -d "$APP_DOMAIN" --redirect
+msg_ok "Installation complete! URL: https://$APP_DOMAIN"
 
 elif [[ "$INSTALL_MODE" == "2" ]]; then
-    # MODE 2: BEHIND PROXY
-    msg_info "Configuring Nginx for Proxy Mode (HTTP)..."
-    
-    cat >/etc/nginx/sites-available/yopass <<'EOF'
+cat >/etc/nginx/sites-available/yopass <<'EOF'
 server {
     listen 80;
     server_name _;
     root /var/www/yopass;
     index index.html;
-     
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-     
+    location / { try_files $uri $uri/ /index.html; }
     location /api/ {
         proxy_pass http://127.0.0.1:1337;
         proxy_set_header Host $host;
@@ -140,18 +110,18 @@ server {
     }
 }
 EOF
-    ln -sf /etc/nginx/sites-available/yopass /etc/nginx/sites-enabled/yopass
-    rm -f /etc/nginx/sites-enabled/default
-    systemctl restart nginx
-    
-    IP_ADDR=$(hostname -I | awk '{print $1}')
-    msg_ok "Installation complete in Proxy Mode!"
-    echo "-------------------------------------------------------"
-    echo "Configuration for your external Proxy (e.g., NPM):"
-    echo "1. Domain: your.domain.com"
-    echo "2. Scheme: http"
-    echo "3. Forward IP: $IP_ADDR"
-    echo "4. Forward Port: 80"
-    echo "5. Enable 'Websockets support' and 'SSL' in your proxy."
-    echo "-------------------------------------------------------"
+ln -sf /etc/nginx/sites-available/yopass /etc/nginx/sites-enabled/yopass
+rm -f /etc/nginx/sites-enabled/default
+systemctl restart nginx
+IP_ADDR=$(hostname -I | awk '{print $1}')
+msg_ok "Installation complete in Proxy Mode!"
+echo "-------------------------------------------------------"
+echo "Proxy Configuration (e.g., NPM):"
+echo "Domain: your.domain.com"
+echo "Scheme: http"
+echo "Forward IP: $IP_ADDR"
+echo "Forward Port: 80"
+echo "-------------------------------------------------------"
+
 else
+msg_error "Invalid selection."
