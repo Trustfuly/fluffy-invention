@@ -16,6 +16,9 @@ var_os="debian"
 var_version="12"
 var_unprivileged="1"
 
+# Override install URL to use our own repo instead of community-scripts
+INSTALL_URL="https://raw.githubusercontent.com/Trustfuly/fluffy-invention/main/install/yopass-install.sh"
+
 # App Output & Base Settings
 header_info "$APP"
 base_settings
@@ -40,10 +43,8 @@ function update_script() {
 
   if [[ ! -f /opt/yopass_version.txt ]] || [[ "${RELEASE}" != "$(cat /opt/yopass_version.txt)" ]]; then
     msg_info "Updating ${APP} to v${RELEASE}"
-
     ARCH="amd64"
     [[ "$(uname -m)" == "aarch64" ]] && ARCH="arm64"
-
     curl -fsSL "https://github.com/paepckehh/yopass-ng/releases/download/v${RELEASE}/yopass-ng-linux_${ARCH}_${RELEASE}.tar.gz" \
       -o /tmp/yopass-ng.tar.gz
     systemctl stop yopass
@@ -62,6 +63,11 @@ function update_script() {
 
 start
 build_container
+
+# Run our own install script instead of the community-scripts one
+msg_info "Running Yopass installer"
+lxc-attach -n "$CTID" -- bash -c "$(curl -fsSL ${INSTALL_URL})"
+
 description
 
 msg_ok "Completed Successfully!\n"
