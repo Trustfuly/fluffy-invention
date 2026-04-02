@@ -4,7 +4,7 @@ source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxV
 # Copyright (c) 2024 Trustfuly
 # Author: Trustfuly (https://github.com/Trustfuly)
 # License: MIT | https://github.com/Trustfuly/fluffy-invention/raw/main/LICENSE
-# Source: https://github.com/paepckehh/yopass-ng
+# Source: https://github.com/jhaals/yopass
 
 # App Default Values
 APP="Yopass"
@@ -16,7 +16,6 @@ var_os="debian"
 var_version="12"
 var_unprivileged="1"
 
-# URL to your NEW install script
 INSTALL_URL="https://raw.githubusercontent.com/Trustfuly/fluffy-invention/main/install/yopass-install.sh"
 
 header_info "$APP"
@@ -26,21 +25,41 @@ color
 catch_errors
 
 function update_script() {
-    header_info
-    if [[ ! -f /usr/local/bin/yopass-server ]]; then
-        msg_error "No ${APP} installation found!"
-        exit
-    fi
-    msg_info "Update logic should be handled by re-running the installer."
+  header_info
+  if [[ ! -f /usr/local/bin/yopass-server ]]; then
+    msg_error "No ${APP} installation found!"
     exit
+  fi
+  msg_info "Re-run the installer to update."
+  exit
 }
 
 start
 build_container
 
-msg_info "Starting Yopass installation inside the container..."
-# Using -t for interactive menu support
-lxc-attach -n "$CTID" -- bash -c "curl -sSL ${INSTALL_URL} -o /tmp/install.sh && bash /tmp/install.sh"
+# Ask install mode on the HOST (has a real terminal)
+echo ""
+echo "  ┌──────────────────────────────────────────┐"
+echo "  │      Yopass – Installation Mode          │"
+echo "  ├──────────────────────────────────────────┤"
+echo "  │  1) Public  – Standalone + Certbot/SSL   │"
+echo "  │  2) Proxy   – Behind NPM / Traefik       │"
+echo "  └──────────────────────────────────────────┘"
+printf "  Select option [1-2]: "
+read -r INSTALL_MODE
+
+while [[ "$INSTALL_MODE" != "1" && "$INSTALL_MODE" != "2" ]]; do
+  printf "  Invalid choice. Select option [1-2]: "
+  read -r INSTALL_MODE
+done
+
+msg_info "Starting Yopass installation (mode: ${INSTALL_MODE})"
+
+# Download install script into container and run it with INSTALL_MODE env var
+lxc-attach -n "$CTID" -- bash -c "
+  curl -fsSL '${INSTALL_URL}' -o /tmp/yopass-install.sh
+  INSTALL_MODE='${INSTALL_MODE}' bash /tmp/yopass-install.sh
+"
 
 msg_ok "Completed Successfully!\n"
 echo -e "${GN}${APP} setup has been successfully initialized!${CL}"
