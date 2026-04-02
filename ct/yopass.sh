@@ -4,10 +4,10 @@ source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxV
 # Copyright (c) 2024 Trustfuly
 # Author: Trustfuly (https://github.com/Trustfuly)
 # License: MIT | https://github.com/Trustfuly/fluffy-invention/raw/main/LICENSE
-# Source: https://github.com/jhaals/yopass
+# Source: https://github.com/paepckehh/yopass-ng
 
 # App Default Values
-APP="Yopass"
+APP="Yopass-NG"
 var_tags="security;secrets"
 var_cpu="1"
 var_ram="256"
@@ -30,32 +30,32 @@ function update_script() {
   check_container_storage
   check_container_resources
 
-  if [[ ! -f /usr/local/bin/yopass-server ]]; then
+  if [[ ! -f /usr/local/bin/yopass-ng ]]; then
     msg_error "No ${APP} installation found!"
     exit
   fi
 
-  RELEASE=$(curl -fsSL https://api.github.com/repos/jhaals/yopass/releases/latest \
-    | grep "tag_name" | awk '{print substr($2, 2, length($2)-3)}')
+  RELEASE=$(curl -fsSL https://api.github.com/repos/paepckehh/yopass-ng/releases/latest \
+    | grep "tag_name" | awk '{print substr($2, 3, length($2)-4)}')
 
   if [[ ! -f /opt/yopass_version.txt ]] || [[ "${RELEASE}" != "$(cat /opt/yopass_version.txt)" ]]; then
-    msg_info "Updating ${APP} to ${RELEASE}"
+    msg_info "Updating ${APP} to v${RELEASE}"
 
     ARCH="amd64"
     [[ "$(uname -m)" == "aarch64" ]] && ARCH="arm64"
 
-    curl -fsSL "https://github.com/jhaals/yopass/releases/download/${RELEASE}/yopass-server_linux_${ARCH}.tar.gz" \
-      -o /tmp/yopass-server.tar.gz
+    curl -fsSL "https://github.com/paepckehh/yopass-ng/releases/download/v${RELEASE}/yopass-ng-linux_${ARCH}_${RELEASE}.tar.gz" \
+      -o /tmp/yopass-ng.tar.gz
     systemctl stop yopass
-    tar -xzf /tmp/yopass-server.tar.gz -C /tmp/
-    mv /tmp/yopass-server /usr/local/bin/yopass-server
-    chmod +x /usr/local/bin/yopass-server
-    rm -f /tmp/yopass-server.tar.gz
+    tar -xzf /tmp/yopass-ng.tar.gz -C /tmp/
+    mv /tmp/yopass-ng /usr/local/bin/yopass-ng
+    chmod +x /usr/local/bin/yopass-ng
+    rm -f /tmp/yopass-ng.tar.gz
     echo "${RELEASE}" >/opt/yopass_version.txt
     systemctl start yopass
-    msg_ok "Updated ${APP} to ${RELEASE}"
+    msg_ok "Updated ${APP} to v${RELEASE}"
   else
-    msg_ok "No update required. ${APP} is already at ${RELEASE}"
+    msg_ok "No update required. ${APP} is already at v${RELEASE}"
   fi
   exit
 }
