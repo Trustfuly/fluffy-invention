@@ -38,8 +38,10 @@ chmod +x /usr/local/bin/yopass-server
 
 msg_info "Downloading website assets..."
 mkdir -p /var/www/yopass
-curl -fsSL "https://github.com/${GITHUB_USER}/${REPO}/archive/refs/heads/main.tar.gz" | tar -xz --strip-components=1 -C /tmp/
-cp -r /tmp/public/* /var/www/yopass/
+mkdir -p /tmp/yopass_repo
+curl -fsSL "https://github.com/${GITHUB_USER}/${REPO}/archive/refs/heads/main.tar.gz" | tar -xz -C /tmp/yopass_repo --strip-components=1
+cp -r /tmp/yopass_repo/public/* /var/www/yopass/
+rm -rf /tmp/yopass_repo
 
 msg_info "Creating systemd service..."
 cat >/etc/systemd/system/yopass.service <<EOF
@@ -59,10 +61,15 @@ EOF
 systemctl daemon-reload && systemctl enable --now yopass
 
 if [[ "$INSTALL_MODE" == "1" ]]; then
-    read -rp "Enter domain: " APP_DOMAIN < /dev/tty
-    read -rp "Enter email: " APP_EMAIL < /dev/tty
+    printf "Enter domain (e.g., secrets.domain.com): "
+    read -r APP_DOMAIN </dev/tty
+    printf "Enter email (for Let's Encrypt): "
+    read -r APP_EMAIL </dev/tty
+    
+    msg_info "Installing Certbot..."
     apt-get install -y -qq certbot python3-certbot-nginx
     cat >/etc/nginx/sites-available/yopass <<'EOF'
+    
 server {
     listen 80;
     server_name $APP_DOMAIN;
@@ -73,7 +80,6 @@ server {
         proxy_pass http://127.0.0.1:1337;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 }
@@ -82,7 +88,10 @@ EOF
     rm -f /etc/nginx/sites-enabled/default
     systemctl restart nginx
     certbot --nginx --non-interactive --agree-tos --email "$APP_EMAIL" -d "$APP_DOMAIN" --redirect
+    msg_ok "Standalone install complete!"
+    
 elif [[ "$INSTALL_MODE" == "2" ]]; then
+    msg_info "Configuring Proxy Mode..."
     cat >/etc/nginx/sites-available/yopass <<'EOF'
 server {
     listen 80;
@@ -103,4 +112,6 @@ EOF
     rm -f /etc/nginx/sites-enabled/default
     systemctl restart nginx
     msg_ok "Installation complete! Use IP: $(hostname -I | awk '{print $1}')"
+else
+    msg_error "Invalid selection."
 fi
