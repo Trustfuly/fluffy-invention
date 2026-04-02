@@ -15,15 +15,22 @@ msg_info()  { echo -e "\e[34m[INFO]\e[0m $1"; }
 msg_ok()    { echo -e "\e[32m[OK]\e[0m   $1"; }
 msg_error() { echo -e "\e[31m[ERROR]\e[0m $1"; exit 1; }
 
-clear
-echo "==========================================="
-echo "   Yopass Installation Mode Selection      "
-echo "==========================================="
-echo "1) Public (Standalone with Certbot/SSL)"
-echo "2) Behind Proxy (Nginx Proxy Manager / NPM)"
-echo "==========================================="
-printf "Select option [1-2]: "
-read -r INSTALL_MODE </dev/tty
+# INSTALL_MODE is passed as env var from ct/yopass.sh
+# If running standalone (direct call), ask interactively
+if [[ -z "${INSTALL_MODE:-}" ]]; then
+  clear
+  echo "==========================================="
+  echo "   Yopass Installation Mode Selection      "
+  echo "==========================================="
+  echo "1) Public (Standalone with Certbot/SSL)"
+  echo "2) Behind Proxy (Nginx Proxy Manager / NPM)"
+  echo "==========================================="
+  printf "Select option [1-2]: "
+  read -r INSTALL_MODE
+fi
+
+[[ "$INSTALL_MODE" != "1" && "$INSTALL_MODE" != "2" ]] && msg_error "Invalid selection. Please enter 1 or 2."
+msg_info "Install mode: ${INSTALL_MODE}"
 
 msg_info "Installing core dependencies"
 apt-get update -qq && apt-get install -y -qq curl wget nginx memcached openssl
