@@ -36,12 +36,13 @@ function update_script() {
 
 start
 build_container
-pct exec "$CTID" -- passwd -d root
-pct exec "$CTID" -- bash -c "mkdir -p /etc/systemd/system/container-getty@.service.d && cat > /etc/systemd/system/container-getty@.service.d/autologin.conf << 'EOF'
+pct exec "$CTID" -- bash -c "mkdir -p /etc/systemd/system/getty@tty1.service.d && cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf << 'EOF'
 [Service]
 ExecStart=
 ExecStart=-/sbin/agetty --autologin root --noclear %I \$TERM
 EOF"
+pct exec "$CTID" -- passwd -d root
+pct exec "$CTID" -- systemctl daemon-reload
 
 # Ask install mode on the HOST (has a real terminal)
 echo ""
