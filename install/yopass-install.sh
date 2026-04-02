@@ -181,8 +181,8 @@ EOF
     echo "    ╔══════════════════════════════════════════════════════════╗"
     echo "    ║          ✅  Yopass installed successfully!              ║"
     echo "    ╠══════════════════════════════════════════════════════════╣"
-    printf "  ║   🌐  URL      : http://%-34s ║\n" "${IP}"               ║
-    printf "  ║   🔁  Proxy to : http://%-31s ║\n" "${IP}:80"            ║
+    echo "    ║   🌐  URL      : http://${IP}                            ║"
+    echo "    ║   🔁  Proxy to : http://${IP}:80                         ║"
     echo "    ║   🔒  TLS      : handled by your reverse proxy           ║"
     echo "    ╠══════════════════════════════════════════════════════════╣"
     echo "    ║              Container login: root                       ║"
