@@ -64,10 +64,22 @@ done
 msg_info "Starting Yopass installation (mode: ${INSTALL_MODE})"
 
 # Download install script into container and run it with INSTALL_MODE env var
-lxc-attach -n "$CTID" -- bash -c "
-  curl -fsSL '${INSTALL_URL}' -o /tmp/yopass-install.sh
-  INSTALL_MODE='${INSTALL_MODE}' bash /tmp/yopass-install.sh
-"
+if [[ "$INSTALL_MODE" == "1" ]]; then
+  printf "  Enter domain (e.g. secrets.example.com): "
+  read -r APP_DOMAIN
+  printf "  Enter email for Let's Encrypt notices:   "
+  read -r APP_EMAIL
+
+  lxc-attach -n "$CTID" -- bash -c "
+    curl -fsSL '${INSTALL_URL}' -o /tmp/yopass-install.sh
+    INSTALL_MODE='${INSTALL_MODE}' APP_DOMAIN='${APP_DOMAIN}' APP_EMAIL='${APP_EMAIL}' bash /tmp/yopass-install.sh
+  "
+else
+  lxc-attach -n "$CTID" -- bash -c "
+    curl -fsSL '${INSTALL_URL}' -o /tmp/yopass-install.sh
+    INSTALL_MODE='${INSTALL_MODE}' bash /tmp/yopass-install.sh
+  "
+fi
 
 msg_ok "Completed Successfully!\n"
 echo -e "${GN}${APP} setup has been successfully initialized!${CL}"
