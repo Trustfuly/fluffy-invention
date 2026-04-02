@@ -36,6 +36,7 @@ function update_script() {
 
 start
 build_container
+pct exec "$CTID" -- passwd -d root
 
 # Ask install mode on the HOST (has a real terminal)
 echo ""
