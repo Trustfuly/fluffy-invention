@@ -87,23 +87,23 @@ if [[ "$INSTALL_MODE" == "1" ]]; then
     msg_info "Installing Certbot..."
     apt-get install -y -qq certbot python3-certbot-nginx
      
-    cat >/etc/nginx/sites-available/yopass <<EOF
+    cat >/etc/nginx/sites-available/yopass <<'EOF'
 server {
     listen 80;
-    server_name $APP_DOMAIN;
+    server_name _;
     root /var/www/yopass;
     index index.html;
 
     location / {
-        try_files \$uri \$uri/ /index.html;
+        try_files $uri $uri/ /index.html;
     }
-
+    
     location /api/ {
         proxy_pass http://127.0.0.1:1337;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 }
 EOF
@@ -120,7 +120,7 @@ elif [[ "$INSTALL_MODE" == "2" ]]; then
     # MODE 2: BEHIND PROXY
     msg_info "Configuring Nginx for Proxy Mode (HTTP)..."
     
-    cat >/etc/nginx/sites-available/yopass <<EOF
+    cat >/etc/nginx/sites-available/yopass <<'EOF'
 server {
     listen 80;
     server_name _;
@@ -128,15 +128,15 @@ server {
     index index.html;
      
     location / {
-        try_files \$uri \$uri/ /index.html;
+        try_files $uri $uri/ /index.html;
     }
      
     location /api/ {
         proxy_pass http://127.0.0.1:1337;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 }
 EOF
