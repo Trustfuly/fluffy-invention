@@ -40,7 +40,7 @@ build_container
 
 msg_info "Starting Yopass installation inside the container..."
 # Using -t for interactive menu support
-lxc-attach -n "$CTID" -- bash -c "$(curl -sSL ${INSTALL_URL})"
+curl -sSL "${INSTALL_URL}" | lxc-attach -n "$CTID" -- bash
 
 msg_ok "Completed Successfully!\n"
 echo -e "${GN}${APP} setup has been successfully initialized!${CL}"
