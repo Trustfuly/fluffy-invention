@@ -41,15 +41,13 @@ ${CL}"
 echo -e "  ${YW}Secure sharing of secrets, passwords and files${CL}\n"
 
 build_container
-
-# ─── Auto-login setup ────────────────────────────────────────────────────────
 pct exec "$CTID" -- mkdir -p /etc/systemd/system/container-getty@1.service.d
 pct exec "$CTID" -- bash -c "printf '[Service]\nExecStart=\nExecStart=-/sbin/agetty --autologin root --noclear tty1\n' > /etc/systemd/system/container-getty@1.service.d/autologin.conf"
-pct exec "$CTID" -- passwd -d root >/dev/null 2>&1
-pct exec "$CTID" -- systemctl daemon-reload >/dev/null 2>&1
-pct exec "$CTID" -- systemctl restart container-getty@1 >/dev/null 2>&1
+pct exec "$CTID" -- passwd -d root 2>/dev/null
+pct exec "$CTID" -- systemctl daemon-reload
+pct exec "$CTID" -- systemctl restart container-getty@1
 
-# ─── Installation mode selection ─────────────────────────────────────────────
+# Ask install mode on the HOST (has a real terminal)
 echo ""
 echo "  ┌──────────────────────────────────────────┐"
 echo "  │      Yopass – Installation Mode          │"
@@ -65,7 +63,7 @@ while [[ "$INSTALL_MODE" != "1" && "$INSTALL_MODE" != "2" ]]; do
   read -r INSTALL_MODE
 done
 
-# ─── Run installer inside container ──────────────────────────────────────────
+# Download install script into container and run it with INSTALL_MODE env var
 if [[ "$INSTALL_MODE" == "1" ]]; then
   set +e
   APP_DOMAIN=$(whiptail --inputbox "Enter domain (e.g. secrets.example.com)" 8 60 3>&1 1>&2 2>&3)
@@ -73,14 +71,14 @@ if [[ "$INSTALL_MODE" == "1" ]]; then
   set -e
   [[ -z "$APP_DOMAIN" || -z "$APP_EMAIL" ]] && msg_error "Domain and email are required."
   msg_info "Starting Yopass installation (mode: ${INSTALL_MODE})"
+
   lxc-attach -n "$CTID" -- bash -c "
-    curl -fsSL '${INSTALL_URL}' -o /tmp/yopass-install.sh 2>/dev/null
+    curl -fsSL '${INSTALL_URL}' -o /tmp/yopass-install.sh
     INSTALL_MODE='${INSTALL_MODE}' APP_DOMAIN='${APP_DOMAIN}' APP_EMAIL='${APP_EMAIL}' bash /tmp/yopass-install.sh
   "
 else
-  msg_info "Starting Yopass installation (mode: ${INSTALL_MODE})"
   lxc-attach -n "$CTID" -- bash -c "
-    curl -fsSL '${INSTALL_URL}' -o /tmp/yopass-install.sh 2>/dev/null
+    curl -fsSL '${INSTALL_URL}' -o /tmp/yopass-install.sh
     INSTALL_MODE='${INSTALL_MODE}' bash /tmp/yopass-install.sh
   "
 fi
