@@ -24,16 +24,6 @@ variables
 color
 catch_errors
 
-function update_script() {
-  header_info
-  if [[ ! -f /usr/local/bin/yopass-server ]]; then
-    msg_error "No ${APP} installation found!"
-    exit
-  fi
-  msg_info "Re-run the installer to update."
-  exit
-}
-
 start
 
 # ─── ASCII logo ───────────────────────────────────────────────────────────────
