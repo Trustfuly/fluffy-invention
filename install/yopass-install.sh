@@ -119,6 +119,12 @@ server {
     root /var/www/yopass;
     index index.html;
 
+    # Static assets — serve directly with correct MIME types
+    location /assets/ {
+        try_files $uri =404;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+    }
+
     # Frontend - serve React SPA
     location / {
         try_files \$uri \$uri/ /index.html;
@@ -168,6 +174,12 @@ server {
 
     root /var/www/yopass;
     index index.html;
+
+    # Static assets — serve directly with correct MIME types
+    location /assets/ {
+        try_files $uri =404;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+    }
 
     location ~ ^/(secret|create|file|config) {
         proxy_pass         http://127.0.0.1:1337;
