@@ -19,7 +19,7 @@ var_unprivileged="1"
 GITHUB_USER="Trustfuly"
 REPO="fluffy-invention"
 RAW_URL="https://raw.githubusercontent.com/${GITHUB_USER}/${REPO}/main"
-INSTALL_URL="https://raw.githubusercontent.com/Trustfuly/fluffy-invention/main/install/yopass-install.sh"
+INSTALL_URL="${RAW_URL}/install/yopass-install.sh"
 
 header_info "$APP"
 base_settings
@@ -28,45 +28,34 @@ color
 catch_errors
 
 function update_script() {
-  CTID=$(pct list | awk '/yopass/{print $1}' | head -1)
-  [[ -z "$CTID" ]] && msg_error "No Yopass container found!"
-  header_info
-  if ! pct exec "$CTID" -- test -f /usr/local/bin/yopass-server; then
-    msg_error "No ${APP} installation found in container ${CTID}!"
-    exit
-  fi
-
-  msg_info "Updating Yopass binary"
-  pct exec "$CTID" -- wget -qO /usr/local/bin/yopass-server "${RAW_URL}/bin/yopass-server"
-  pct exec "$CTID" -- chmod +x /usr/local/bin/yopass-server
-  msg_ok "Binary updated"
-
-  msg_info "Updating frontend assets"
-  pct exec "$CTID" -- bash -c "
-    mkdir -p /tmp/yopass_repo
-    curl -fsSL 'https://github.com/${GITHUB_USER}/${REPO}/archive/refs/heads/main.tar.gz' \
-      | tar -xz -C /tmp/yopass_repo --strip-components=1
-    cp -r /tmp/yopass_repo/public/* /var/www/yopass/
-    rm -rf /tmp/yopass_repo
-    chown -R www-data:www-data /var/www/yopass
-  "
-  msg_ok "Frontend assets updated"
-
-  msg_info "Restarting Yopass service"
-  pct exec "$CTID" -- systemctl restart yopass
-  msg_ok "Yopass restarted successfully"
-  exit
+  echo -e "\n  ${YW}To update Yopass, run inside the container:${CL}"
+  echo -e "  ${GN}bash -c \"\$(curl -fsSL ${RAW_URL}/update.sh)\"${CL}\n"
+  exit 0
 }
 
 start
+
+# ─── ASCII logo ───────────────────────────────────────────────────────────────
+echo -e "\n${GN}
+    ██╗   ██╗ ██████╗ ██████╗  █████╗ ███████╗███████╗
+    ╚██╗ ██╔╝██╔═══██╗██╔══██╗██╔══██╗██╔════╝██╔════╝
+     ╚████╔╝ ██║   ██║██████╔╝███████║███████╗███████╗
+      ╚██╔╝  ██║   ██║██╔═══╝ ██╔══██║╚════██║╚════██║
+       ██║   ╚██████╔╝██║     ██║  ██║███████║███████║
+       ╚═╝    ╚═════╝ ╚═╝     ╚═╝  ╚═╝╚══════╝╚══════╝
+${CL}"
+echo -e "  ${YW}Secure sharing of secrets, passwords and files${CL}\n"
+
 build_container
+
+# ─── Auto-login setup ────────────────────────────────────────────────────────
 pct exec "$CTID" -- mkdir -p /etc/systemd/system/container-getty@1.service.d
 pct exec "$CTID" -- bash -c "printf '[Service]\nExecStart=\nExecStart=-/sbin/agetty --autologin root --noclear tty1\n' > /etc/systemd/system/container-getty@1.service.d/autologin.conf"
-pct exec "$CTID" -- passwd -d root 2>/dev/null
-pct exec "$CTID" -- systemctl daemon-reload
-pct exec "$CTID" -- systemctl restart container-getty@1
+pct exec "$CTID" -- passwd -d root >/dev/null 2>&1
+pct exec "$CTID" -- systemctl daemon-reload >/dev/null 2>&1
+pct exec "$CTID" -- systemctl restart container-getty@1 >/dev/null 2>&1
 
-# Ask install mode on the HOST (has a real terminal)
+# ─── Installation mode selection ─────────────────────────────────────────────
 echo ""
 echo "  ┌──────────────────────────────────────────┐"
 echo "  │      Yopass – Installation Mode          │"
@@ -82,7 +71,7 @@ while [[ "$INSTALL_MODE" != "1" && "$INSTALL_MODE" != "2" ]]; do
   read -r INSTALL_MODE
 done
 
-# Download install script into container and run it with INSTALL_MODE env var
+# ─── Run installer inside container ──────────────────────────────────────────
 if [[ "$INSTALL_MODE" == "1" ]]; then
   set +e
   APP_DOMAIN=$(whiptail --inputbox "Enter domain (e.g. secrets.example.com)" 8 60 3>&1 1>&2 2>&3)
@@ -90,14 +79,14 @@ if [[ "$INSTALL_MODE" == "1" ]]; then
   set -e
   [[ -z "$APP_DOMAIN" || -z "$APP_EMAIL" ]] && msg_error "Domain and email are required."
   msg_info "Starting Yopass installation (mode: ${INSTALL_MODE})"
-
   lxc-attach -n "$CTID" -- bash -c "
-    curl -fsSL '${INSTALL_URL}' -o /tmp/yopass-install.sh
+    curl -fsSL '${INSTALL_URL}' -o /tmp/yopass-install.sh 2>/dev/null
     INSTALL_MODE='${INSTALL_MODE}' APP_DOMAIN='${APP_DOMAIN}' APP_EMAIL='${APP_EMAIL}' bash /tmp/yopass-install.sh
   "
 else
+  msg_info "Starting Yopass installation (mode: ${INSTALL_MODE})"
   lxc-attach -n "$CTID" -- bash -c "
-    curl -fsSL '${INSTALL_URL}' -o /tmp/yopass-install.sh
+    curl -fsSL '${INSTALL_URL}' -o /tmp/yopass-install.sh 2>/dev/null
     INSTALL_MODE='${INSTALL_MODE}' bash /tmp/yopass-install.sh
   "
 fi
