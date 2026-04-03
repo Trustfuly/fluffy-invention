@@ -62,9 +62,9 @@ msg_info "Starting Yopass installation (mode: ${INSTALL_MODE})"
 # Download install script into container and run it with INSTALL_MODE env var
 if [[ "$INSTALL_MODE" == "1" ]]; then
   printf "  Enter domain (e.g. secrets.example.com): "
-  read -r APP_DOMAIN
+  read -r APP_DOMAIN </dev/tty
   printf "  Enter email for Let's Encrypt notices:   "
-  read -r APP_EMAIL
+  read -r APP_EMAIL </dev/tty
 
   lxc-attach -n "$CTID" -- bash -c "
     curl -fsSL '${INSTALL_URL}' -o /tmp/yopass-install.sh
