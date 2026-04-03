@@ -16,7 +16,7 @@ msg_ok()    { echo -e "\e[32m[OK]\e[0m   $1"; }
 msg_error() { echo -e "\e[31m[ERROR]\e[0m $1"; exit 1; }
 
 # Check if the binary already exists OR the update flag is passed
-if [[ "$UPDATE_ONLY" == "yes" || -f /usr/local/bin/yopass-server ]]; then
+if [[ "${UPDATE_ONLY:-no}" == "yes" ]]; then
     echo "  [INFO] Existing installation detected. Performing update..."
     
     # Put your update steps here (Stop service, Replace binary, Replace assets)
