@@ -29,6 +29,10 @@ echo "  ╚═══════════════════════
 echo ""
 
 # ─── Update binary ───────────────────────────────────────────────────────────
+msg_info "Stopping Yopass service"
+systemctl stop yopass
+msg_ok "Yopass stopped"
+
 msg_info "Updating Yopass binary"
 wget -qO /usr/local/bin/yopass-server "${RAW_URL}/bin/yopass-server"
 chmod +x /usr/local/bin/yopass-server
@@ -45,9 +49,9 @@ chown -R www-data:www-data /var/www/yopass
 msg_ok "Frontend assets updated"
 
 # ─── Restart service ─────────────────────────────────────────────────────────
-msg_info "Restarting Yopass service"
-systemctl restart yopass
-msg_ok "Yopass restarted"
+msg_info "Starting Yopass service"
+systemctl start yopass
+msg_ok "Yopass started"
 
 IP=$(hostname -I | awk '{print $1}')
 echo ""
