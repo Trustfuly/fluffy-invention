@@ -41,10 +41,8 @@ Run inside the container or from the Proxmox host:
 
 ```bash
 # From Proxmox host
-pct exec <CTID> -- bash -c "$(curl -fsSL https://raw.githubusercontent.com/Trustfuly/fluffy-invention/main/update.sh)"
-
-# Or from inside the container
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/Trustfuly/fluffy-invention/main/update.sh)"
+
 ```
 
 The update script will:
