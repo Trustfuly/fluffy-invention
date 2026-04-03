@@ -15,6 +15,19 @@ msg_info()  { echo -e "\e[34m[INFO]\e[0m $1"; }
 msg_ok()    { echo -e "\e[32m[OK]\e[0m   $1"; }
 msg_error() { echo -e "\e[31m[ERROR]\e[0m $1"; exit 1; }
 
+# Check if the binary already exists OR the update flag is passed
+if [[ "$UPDATE_ONLY" == "yes" || -f /usr/local/bin/yopass-server ]]; then
+    echo "  [INFO] Existing installation detected. Performing update..."
+    
+    # Put your update steps here (Stop service, Replace binary, Replace assets)
+    systemctl stop yopass
+    # ... replacement logic ...
+    systemctl start yopass
+    
+    echo "  [OK] Update finished!"
+    exit 0 # Exit here so it doesn't run the installer prompts
+fi
+
 # INSTALL_MODE is passed as env var from ct/yopass.sh
 # If running standalone (direct call), ask interactively
 if [[ -z "${INSTALL_MODE:-}" ]]; then
