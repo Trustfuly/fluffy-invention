@@ -118,7 +118,7 @@ server {
     }
 
     # Backend API - proxy to yopass-server
-    location ~ ^/(secret|create|file) {
+    location ~ ^/(secret|create|file|config) {
         proxy_pass         http://127.0.0.1:1337;
         proxy_set_header   Host              \$host;
         proxy_set_header   X-Real-IP         \$remote_addr;
@@ -157,7 +157,7 @@ server {
     }
 
     # Backend API - proxy to yopass-server
-    location ~ ^/(secret|create|file) {
+    location ~ ^/(secret|create|file|config) {
         proxy_pass         http://127.0.0.1:1337;
         proxy_set_header   Host              $host;
         proxy_set_header   X-Real-IP         $remote_addr;
