@@ -38,7 +38,7 @@ start
 build_container
 pct exec "$CTID" -- mkdir -p /etc/systemd/system/container-getty@1.service.d
 pct exec "$CTID" -- bash -c "printf '[Service]\nExecStart=\nExecStart=-/sbin/agetty --autologin root --noclear tty1\n' > /etc/systemd/system/container-getty@1.service.d/autologin.conf"
-pct exec "$CTID" -- passwd -d root
+pct exec "$CTID" -- passwd -d root 2>/dev/null
 pct exec "$CTID" -- systemctl daemon-reload
 
 # Ask install mode on the HOST (has a real terminal)
@@ -57,8 +57,6 @@ while [[ "$INSTALL_MODE" != "1" && "$INSTALL_MODE" != "2" ]]; do
   read -r INSTALL_MODE
 done
 
-msg_info "Starting Yopass installation (mode: ${INSTALL_MODE})"
-
 # Download install script into container and run it with INSTALL_MODE env var
 if [[ "$INSTALL_MODE" == "1" ]]; then
   set +e
@@ -66,6 +64,7 @@ if [[ "$INSTALL_MODE" == "1" ]]; then
   APP_EMAIL=$(whiptail --inputbox "Enter email for Let's Encrypt notices" 8 60 3>&1 1>&2 2>&3)
   set -e
   [[ -z "$APP_DOMAIN" || -z "$APP_EMAIL" ]] && msg_error "Domain and email are required."
+  msg_info "Starting Yopass installation (mode: ${INSTALL_MODE})"
 
   lxc-attach -n "$CTID" -- bash -c "
     curl -fsSL '${INSTALL_URL}' -o /tmp/yopass-install.sh
