@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2024 Trustfuly
+# Copyright (c) 2026 Trustfuly
 # Author: Trustfuly (https://github.com/Trustfuly)
 # License: MIT | https://github.com/Trustfuly/fluffy-invention/raw/main/LICENSE
 # Source: https://github.com/jhaals/yopass
@@ -186,16 +186,16 @@ EOF
     ln -sf /etc/nginx/sites-available/yopass /etc/nginx/sites-enabled/yopass
     rm -f /etc/nginx/sites-enabled/default
     nginx -t && systemctl restart nginx
-
+ 
     IP=$(hostname -I | awk '{print $1}')
-
+ 
     clear
     echo -e "\e[32m"
     echo ""
     echo ""
     echo ""
     echo "    ╔══════════════════════════════════════════════════════════╗"
-    echo "    ║          ✅  Yopass installed successfully!              ║"
+    echo "    ║          ✅  Yopass installed successfully!               ║"
     echo "    ╚══════════════════════════════════════════════════════════╝"
     echo "        🌐  URL      : https://${IP}                           "
     echo "        🔁  Proxy to : https://${IP}                           "
