@@ -1,7 +1,8 @@
 # Yopass – Proxmox LXC Install Script
 
 > Install [Yopass](https://github.com/jhaals/yopass) as a native LXC container on Proxmox VE — no Docker required.  
-> Built in the style of [community-scripts/ProxmoxVE](https://github.com/community-scripts/ProxmoxVE).
+> Built in the style of [community-scripts/ProxmoxVE](https://github.com/community-scripts/ProxmoxVE).  
+> Includes Ukrainian language support (Russian removed).
 
 ---
 
@@ -34,14 +35,56 @@ The script will:
 
 ---
 
+## Updating
+
+Run inside the container or from the Proxmox host:
+
+```bash
+# From Proxmox host
+pct exec <CTID> -- bash -c "$(curl -fsSL https://raw.githubusercontent.com/Trustfuly/fluffy-invention/main/update.sh)"
+
+# Or from inside the container
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/Trustfuly/fluffy-invention/main/update.sh)"
+```
+
+The update script will:
+- Replace the `yopass-server` binary
+- Update frontend assets from this repo
+- Restart the Yopass service
+
+---
+
+## Building a New Release
+
+When a new version of Yopass is released, rebuild the frontend and binary with:
+
+```bash
+# Clone this repo and run the build script
+git clone https://github.com/Trustfuly/fluffy-invention.git
+cd fluffy-invention
+bash build.sh --push
+```
+
+Requirements: `git`, `node >= 18`, `npm`, `go`
+
+The build script will:
+- Clone the latest `jhaals/yopass` source
+- Add Ukrainian translation and set it as default
+- Remove Russian language
+- Build the frontend
+- Build the `yopass-server` binary
+- Commit and push `public/` and `bin/` to this repo
+
+---
+
 ## What Gets Installed
 
-| Component       | Source            | Details                             |
-|-----------------|-------------------|-------------------------------------|
+| Component       | Source                     | Details                                    |
+|-----------------|----------------------------|--------------------------------------------|
 | `yopass-server` | Trustfuly/fluffy-invention | Custom binary, listens on `127.0.0.1:1337` |
-| `memcached`     | apt               | Listens on `127.0.0.1:11211`        |
-| `nginx`         | apt               | Reverse proxy, ports 80 + 443       |
-| `certbot`       | apt               | Mode 1 only – Let's Encrypt TLS     |
+| `memcached`     | apt                        | Listens on `127.0.0.1:11211`               |
+| `nginx`         | apt                        | Reverse proxy, ports 80 + 443              |
+| `certbot`       | apt                        | Mode 1 only – Let's Encrypt TLS            |
 
 ---
 
@@ -55,10 +98,12 @@ fluffy-invention/
 │   └── yopass.sh             ← Run on the Proxmox host — creates the LXC
 ├── install/
 │   └── yopass-install.sh     ← Runs inside the LXC — installs the app
-├── public/                   ← Frontend assets (React SPA)
+├── public/                   ← Frontend assets (React SPA, Ukrainian UI)
 │   ├── assets/
 │   ├── index.html
 │   └── ...
+├── build.sh                  ← Rebuild frontend + binary from latest yopass source
+├── update.sh                 ← Update existing container
 └── README.md
 ```
 
@@ -79,9 +124,9 @@ fluffy-invention/
 
 ## Container Access
 
-| Setting  | Value |
-|----------|-------|
-| Login    | `root` |
+| Setting  | Value                     |
+|----------|---------------------------|
+| Login    | `root`                    |
 | Password | none (auto-login enabled) |
 
 Auto-login is configured on `tty1` — opening the console in Proxmox UI will drop you directly into a root shell.
@@ -97,7 +142,7 @@ curl -fsSL https://raw.githubusercontent.com/Trustfuly/fluffy-invention/main/ins
 INSTALL_MODE=2 bash /tmp/yopass-install.sh
 ```
 
-Replace `INSTALL_MODE=2` with `INSTALL_MODE=1` for standalone mode (requires `APP_DOMAIN` and `APP_EMAIL`):
+For standalone mode with Certbot:
 
 ```bash
 INSTALL_MODE=1 APP_DOMAIN=secrets.example.com APP_EMAIL=you@example.com bash /tmp/yopass-install.sh
