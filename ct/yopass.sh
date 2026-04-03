@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+
 source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/build.func)
 
 # Copyright (c) 2026 Trustfuly
@@ -16,10 +16,7 @@ var_os="debian"
 var_version="12"
 var_unprivileged="1"
 
-GITHUB_USER="Trustfuly"
-REPO="fluffy-invention"
-RAW_URL="https://raw.githubusercontent.com/${GITHUB_USER}/${REPO}/main"
-INSTALL_URL="${RAW_URL}/install/yopass-install.sh"
+INSTALL_URL="https://raw.githubusercontent.com/Trustfuly/fluffy-invention/main/install/yopass-install.sh"
 
 header_info "$APP"
 base_settings
@@ -28,34 +25,24 @@ color
 catch_errors
 
 function update_script() {
-  echo -e "\n  ${YW}To update Yopass, run inside the container:${CL}"
-  echo -e "  ${GN}bash -c \"\$(curl -fsSL ${RAW_URL}/update.sh)\"${CL}\n"
-  exit 0
+  header_info
+  if [[ ! -f /usr/local/bin/yopass-server ]]; then
+    msg_error "No ${APP} installation found!"
+    exit
+  fi
+  msg_info "Re-run the installer to update."
+  exit
 }
 
 start
-
-# ─── ASCII logo ───────────────────────────────────────────────────────────────
-echo -e "\n${GN}
-    ██╗   ██╗ ██████╗ ██████╗  █████╗ ███████╗███████╗
-    ╚██╗ ██╔╝██╔═══██╗██╔══██╗██╔══██╗██╔════╝██╔════╝
-     ╚████╔╝ ██║   ██║██████╔╝███████║███████╗███████╗
-      ╚██╔╝  ██║   ██║██╔═══╝ ██╔══██║╚════██║╚════██║
-       ██║   ╚██████╔╝██║     ██║  ██║███████║███████║
-       ╚═╝    ╚═════╝ ╚═╝     ╚═╝  ╚═╝╚══════╝╚══════╝
-${CL}"
-echo -e "  ${YW}Secure sharing of secrets, passwords and files${CL}\n"
-
 build_container
-
-# ─── Auto-login setup ────────────────────────────────────────────────────────
 pct exec "$CTID" -- mkdir -p /etc/systemd/system/container-getty@1.service.d
 pct exec "$CTID" -- bash -c "printf '[Service]\nExecStart=\nExecStart=-/sbin/agetty --autologin root --noclear tty1\n' > /etc/systemd/system/container-getty@1.service.d/autologin.conf"
-pct exec "$CTID" -- passwd -d root >/dev/null 2>&1
-pct exec "$CTID" -- systemctl daemon-reload >/dev/null 2>&1
-pct exec "$CTID" -- systemctl restart container-getty@1 >/dev/null 2>&1
+pct exec "$CTID" -- passwd -d root 2>/dev/null
+pct exec "$CTID" -- systemctl daemon-reload
+pct exec "$CTID" -- systemctl restart container-getty@1
 
-# ─── Installation mode selection ─────────────────────────────────────────────
+# Ask install mode on the HOST (has a real terminal)
 echo ""
 echo "  ┌──────────────────────────────────────────┐"
 echo "  │      Yopass – Installation Mode          │"
@@ -71,7 +58,7 @@ while [[ "$INSTALL_MODE" != "1" && "$INSTALL_MODE" != "2" ]]; do
   read -r INSTALL_MODE
 done
 
-# ─── Run installer inside container ──────────────────────────────────────────
+# Download install script into container and run it with INSTALL_MODE env var
 if [[ "$INSTALL_MODE" == "1" ]]; then
   set +e
   APP_DOMAIN=$(whiptail --inputbox "Enter domain (e.g. secrets.example.com)" 8 60 3>&1 1>&2 2>&3)
@@ -79,14 +66,14 @@ if [[ "$INSTALL_MODE" == "1" ]]; then
   set -e
   [[ -z "$APP_DOMAIN" || -z "$APP_EMAIL" ]] && msg_error "Domain and email are required."
   msg_info "Starting Yopass installation (mode: ${INSTALL_MODE})"
+
   lxc-attach -n "$CTID" -- bash -c "
-    curl -fsSL '${INSTALL_URL}' -o /tmp/yopass-install.sh 2>/dev/null
+    curl -fsSL '${INSTALL_URL}' -o /tmp/yopass-install.sh
     INSTALL_MODE='${INSTALL_MODE}' APP_DOMAIN='${APP_DOMAIN}' APP_EMAIL='${APP_EMAIL}' bash /tmp/yopass-install.sh
   "
 else
-  msg_info "Starting Yopass installation (mode: ${INSTALL_MODE})"
   lxc-attach -n "$CTID" -- bash -c "
-    curl -fsSL '${INSTALL_URL}' -o /tmp/yopass-install.sh 2>/dev/null
+    curl -fsSL '${INSTALL_URL}' -o /tmp/yopass-install.sh
     INSTALL_MODE='${INSTALL_MODE}' bash /tmp/yopass-install.sh
   "
 fi
