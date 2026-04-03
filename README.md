@@ -13,19 +13,35 @@ Run this command in your **Proxmox VE Shell**:
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/Trustfuly/fluffy-invention/main/ct/yopass.sh)"
 ```
 
-Follow the interactive prompts (or press Enter to accept defaults).  
-When finished, Yopass will be available at `https://<container-ip>`.
+The script will:
+1. Create an LXC container with default settings
+2. Ask you to choose an installation mode
+3. Install and configure everything automatically
+
+---
+
+## Installation Modes
+
+### Mode 1 — Public (Standalone + Certbot)
+- Requires a domain name pointing to your server
+- Automatically issues a **Let's Encrypt** TLS certificate
+- Ports **80** and **443** must be reachable from the internet
+
+### Mode 2 — Behind Proxy (NPM / Traefik)
+- Uses a **self-signed certificate** (browser warning expected)
+- TLS is handled by your reverse proxy (Nginx Proxy Manager, Traefik, etc.)
+- Point your reverse proxy to `https://<container-ip>:443`
 
 ---
 
 ## What Gets Installed
 
-| Component       | Source         | Details                               |
-|-----------------|----------------|---------------------------------------|
-| `yopass-server` | GitHub release | Binary, listens on `127.0.0.1:1337`   |
-| `memcached`     | apt            | Listens on `127.0.0.1:11211`          |
-| `nginx`         | apt            | Reverse proxy, ports 80 + 443         |
-| `certbot`       | apt            | Optional – Let's Encrypt TLS          |
+| Component       | Source            | Details                             |
+|-----------------|-------------------|-------------------------------------|
+| `yopass-server` | Trustfuly/fluffy-invention | Custom binary, listens on `127.0.0.1:1337` |
+| `memcached`     | apt               | Listens on `127.0.0.1:11211`        |
+| `nginx`         | apt               | Reverse proxy, ports 80 + 443       |
+| `certbot`       | apt               | Mode 1 only – Let's Encrypt TLS     |
 
 ---
 
@@ -33,34 +49,18 @@ When finished, Yopass will be available at `https://<container-ip>`.
 
 ```
 fluffy-invention/
+├── bin/
+│   └── yopass-server         ← Pre-built binary
 ├── ct/
 │   └── yopass.sh             ← Run on the Proxmox host — creates the LXC
 ├── install/
 │   └── yopass-install.sh     ← Runs inside the LXC — installs the app
+├── public/                   ← Frontend assets (React SPA)
+│   ├── assets/
+│   ├── index.html
+│   └── ...
 └── README.md
 ```
-
----
-
-## Let's Encrypt (after install)
-
-By default the installer creates a **self-signed certificate** so Yopass starts immediately.  
-To replace it with a trusted Let's Encrypt certificate, run inside the container:
-
-```bash
-bash /opt/yopass-certbot.sh
-```
-
-Requirements:
-- Ports **80** and **443** must be reachable from the internet
-- A DNS **A-record** must point to the container's IP address
-
----
-
-## Updating
-
-Re-run the same command from the Proxmox shell and select **Update** when prompted.  
-The script will fetch the latest release from GitHub and restart the service.
 
 ---
 
@@ -77,13 +77,48 @@ The script will fetch the latest release from GitHub and restart the service.
 
 ---
 
+## Container Access
+
+| Setting  | Value |
+|----------|-------|
+| Login    | `root` |
+| Password | none (auto-login enabled) |
+
+Auto-login is configured on `tty1` — opening the console in Proxmox UI will drop you directly into a root shell.
+
+---
+
 ## Manual Install (without the ct/ script)
 
-If you already have an LXC container, you can run the install script directly inside it:
+If you already have an LXC container, run the install script directly inside it:
 
 ```bash
-# Inside the container
-curl -fsSL https://raw.githubusercontent.com/Trustfuly/fluffy-invention/main/install/yopass-install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Trustfuly/fluffy-invention/main/install/yopass-install.sh -o /tmp/yopass-install.sh
+INSTALL_MODE=2 bash /tmp/yopass-install.sh
+```
+
+Replace `INSTALL_MODE=2` with `INSTALL_MODE=1` for standalone mode (requires `APP_DOMAIN` and `APP_EMAIL`):
+
+```bash
+INSTALL_MODE=1 APP_DOMAIN=secrets.example.com APP_EMAIL=you@example.com bash /tmp/yopass-install.sh
+```
+
+---
+
+## Service Management
+
+```bash
+systemctl status yopass
+systemctl restart yopass
+systemctl stop yopass
+```
+
+## Config Files
+
+```
+/etc/systemd/system/yopass.service
+/etc/nginx/sites-available/yopass
+/etc/memcached.conf
 ```
 
 ---
