@@ -37,17 +37,18 @@ The script will:
 
 ## Updating
 
-Run inside the container or from the Proxmox host:
-
+Re-run the same command from the Proxmox Shell:
 ```bash
-# From Proxmox host
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/Trustfuly/fluffy-invention/main/update.sh)"
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/Trustfuly/fluffy-invention/main/ct/yopass.sh)"
 ```
 
-The update script will:
+If existing Yopass containers are detected, the script will automatically offer to update them instead of creating a new one.
+
+The update will:
+- Stop the Yopass service
 - Replace the `yopass-server` binary
-- Update frontend assets from this repo
-- Restart the Yopass service
+- Redeploy frontend assets from this repo
+- Restart Yopass and Nginx
 
 ---
 
