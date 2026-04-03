@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/build.func)
 
-# Copyright (c) 2024 Trustfuly
+# Copyright (c) 2026 Trustfuly
 # Author: Trustfuly (https://github.com/Trustfuly)
 # License: MIT | https://github.com/Trustfuly/fluffy-invention/raw/main/LICENSE
 # Source: https://github.com/jhaals/yopass
