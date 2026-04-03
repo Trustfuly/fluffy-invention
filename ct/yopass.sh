@@ -20,16 +20,14 @@ REPO="fluffy-invention"
 RAW_URL="https://raw.githubusercontent.com/${GITHUB_USER}/${REPO}/main"
 INSTALL_URL="${RAW_URL}/install/yopass-install.sh"
 
-# --- Function to update existing containers using your specific block ---
+# --- Function to update existing containers with fix for MIME type error ---
 function update_script() {
-  # Disable cleanup traps to prevent accidental deletion
   trap - EXIT
   trap - ERR
   
   header_info
   msg_info "Searching for containers with 'yopass' tag..."
   
-  # Find Container IDs safely
   local UPD_CTIDS=$(grep -lE "^tags:.*yopass" /etc/pve/lxc/[0-9]*.conf 2>/dev/null | awk -F'/' '{print $NF}' | sed 's/\.conf//' || true)
 
   if [[ -z "$UPD_CTIDS" ]]; then
@@ -45,7 +43,7 @@ function update_script() {
       continue
     fi
 
-    # ─── Execute Update Inside Container (Your Block) ────────────────────────
+    # ─── Execute Update Inside Container ────────────────────────────────────
     pct exec "$CTID" -- bash -c "
         set -euo pipefail
         
@@ -57,7 +55,7 @@ function update_script() {
 
         echo -e \"  \${Y}[INFO]\${NC} Checking installation...\"
         if [[ ! -f /usr/local/bin/yopass-server ]]; then
-            echo -e \"  \${R}[ERROR]\${NC} Yopass is not installed in this container (/usr/local/bin/yopass-server not found).\"
+            echo -e \"  \${R}[ERROR]\${NC} Yopass is not installed in this container.\"
             exit 1
         fi
 
@@ -76,23 +74,28 @@ function update_script() {
 
         echo -e \"  \${Y}[INFO]\${NC} Updating frontend assets\"
         mkdir -p /tmp/yopass_repo
+        # Download and extract the repository
         curl -fsSL \"https://github.com/${GITHUB_USER}/${REPO}/archive/refs/heads/main.tar.gz\" \
           | tar -xz -C /tmp/yopass_repo --strip-components=1
         
-        rm -rf /var/www/yopass/assets/*
+        # CLEANUP FIX: Delete EVERYTHING in the web root to avoid MIME type errors
+        # This ensures no old hashed JS files remain.
+        rm -rf /var/www/yopass/*
+        
+        # Copy all contents from the public folder of your repo
         cp -r /tmp/yopass_repo/public/* /var/www/yopass/
+        
         rm -rf /tmp/yopass_repo
         chown -R www-data:www-data /var/www/yopass
 
         echo -e \"  \${Y}[INFO]\${NC} Starting Yopass service\"
         systemctl start yopass
+        systemctl restart nginx
 
         IP=\$(hostname -I | awk '{print \$1}')
         echo \"\"
         echo \"  ╔══════════════════════════════════════════════════════════╗\"
         echo \"  ║          ✅  Yopass updated successfully!                 ║\"
-        echo \"  ╠══════════════════════════════════════════════════════════╣\"
-        printf \"  ║   🌐  URL : https://%-38s ║\\n\" \"\${IP}\"
         echo \"  ╚══════════════════════════════════════════════════════════╝\"
         echo \"\"
     "
