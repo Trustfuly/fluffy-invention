@@ -80,6 +80,13 @@ msg_ok "Yopass service started"
 
 rm -f /etc/nginx/sites-enabled/default
 
+mkdir -p /etc/nginx/ssl
+openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
+  -keyout /etc/nginx/ssl/yopass.key \
+  -out /etc/nginx/ssl/yopass.crt \
+  -subj "/CN=yopass.local" 2>/dev/null
+msg_ok "Self-signed certificate generated"
+
 if [[ "$INSTALL_MODE" == "1" ]]; then
     printf "Enter domain (e.g. secrets.example.com): "
     APP_DOMAIN="${APP_DOMAIN:-}"
@@ -140,9 +147,20 @@ EOF
 elif [[ "$INSTALL_MODE" == "2" ]]; then
     msg_info "Configuring Proxy Mode (HTTP only, no TLS)"
     cat >/etc/nginx/sites-available/yopass <<'EOF'
+
 server {
     listen 80;
     server_name _;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name _;
+
+    ssl_certificate     /etc/nginx/ssl/yopass.crt;
+    ssl_certificate_key /etc/nginx/ssl/yopass.key;
+    ssl_protocols       TLSv1.2 TLSv1.3;
 
     add_header X-Frame-Options DENY;
     add_header X-Content-Type-Options nosniff;
@@ -151,18 +169,16 @@ server {
     root /var/www/yopass;
     index index.html;
 
-    # Frontend - serve React SPA
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-
-    # Backend API - proxy to yopass-server
     location ~ ^/(secret|create|file|config) {
         proxy_pass         http://127.0.0.1:1337;
         proxy_set_header   Host              $host;
         proxy_set_header   X-Real-IP         $remote_addr;
         proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
         proxy_set_header   X-Forwarded-Proto $scheme;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.html;
     }
 }
 EOF
@@ -181,8 +197,8 @@ EOF
     echo "    ╔══════════════════════════════════════════════════════════╗"
     echo "    ║          ✅  Yopass installed successfully!              ║"
     echo "    ╠══════════════════════════════════════════════════════════╣"
-    echo "    ║   🌐  URL      : http://${IP}                            ║"
-    echo "    ║   🔁  Proxy to : http://${IP}:80                         ║"
+    echo "    ║   🌐  URL      : https://${IP}                           ║"
+    echo "    ║   🔁  Proxy to : https://${IP}                           ║"
     echo "    ║   🔒  TLS      : handled by your reverse proxy           ║"
     echo "    ╠══════════════════════════════════════════════════════════╣"
     echo "    ║              Container login: root                       ║"
