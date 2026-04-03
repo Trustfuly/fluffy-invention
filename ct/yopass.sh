@@ -36,8 +36,7 @@ function update_script() {
 }
 
 start
-#build_container
-build_container 2>&1 | grep -v "curl: (22)"
+build_container
 pct exec "$CTID" -- mkdir -p /etc/systemd/system/container-getty@1.service.d
 pct exec "$CTID" -- bash -c "printf '[Service]\nExecStart=\nExecStart=-/sbin/agetty --autologin root --noclear tty1\n' > /etc/systemd/system/container-getty@1.service.d/autologin.conf"
 #pct exec "$CTID" -- passwd -d root 2>/dev/null
@@ -71,12 +70,12 @@ if [[ "$INSTALL_MODE" == "1" ]]; then
   msg_info "Starting Yopass installation (mode: ${INSTALL_MODE})"
 
   lxc-attach -n "$CTID" -- bash -c "
-    curl -fsSL '${INSTALL_URL}' -o /tmp/yopass-install.sh
+    curl -fsSL '${INSTALL_URL}' -o /tmp/yopass-install.sh 2>/dev/null
     INSTALL_MODE='${INSTALL_MODE}' APP_DOMAIN='${APP_DOMAIN}' APP_EMAIL='${APP_EMAIL}' bash /tmp/yopass-install.sh
   "
 else
   lxc-attach -n "$CTID" -- bash -c "
-    curl -fsSL '${INSTALL_URL}' -o /tmp/yopass-install.sh
+    curl -fsSL '${INSTALL_URL}' -o /tmp/yopass-install.sh 2>/dev/null
     INSTALL_MODE='${INSTALL_MODE}' bash /tmp/yopass-install.sh
   "
 fi
