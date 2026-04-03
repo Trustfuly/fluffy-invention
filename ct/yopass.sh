@@ -36,11 +36,8 @@ function update_script() {
 
 start
 build_container
-pct exec "$CTID" -- bash -c "mkdir -p /etc/systemd/system/container-getty@1.service.d && cat > /etc/systemd/system/container-getty@1.service.d/autologin.conf << 'EOF'
-[Service]
-ExecStart=
-ExecStart=-/sbin/agetty --autologin root --noclear tty1
-EOF"
+pct exec "$CTID" -- mkdir -p /etc/systemd/system/container-getty@1.service.d
+pct exec "$CTID" -- bash -c "printf '[Service]\nExecStart=\nExecStart=-/sbin/agetty --autologin root --noclear tty1\n' > /etc/systemd/system/container-getty@1.service.d/autologin.conf"
 pct exec "$CTID" -- passwd -d root
 pct exec "$CTID" -- systemctl daemon-reload
 
