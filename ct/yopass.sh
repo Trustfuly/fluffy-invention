@@ -69,12 +69,12 @@ if [[ "$INSTALL_MODE" == "1" ]]; then
   msg_info "Starting Yopass installation (mode: ${INSTALL_MODE})"
 
   lxc-attach -n "$CTID" -- bash -c "
-    curl -fsSL '${INSTALL_URL}' -o /tmp/yopass-install.sh 2>/dev/null
+    curl -fsSL '${INSTALL_URL}' -o /tmp/yopass-install.sh
     INSTALL_MODE='${INSTALL_MODE}' APP_DOMAIN='${APP_DOMAIN}' APP_EMAIL='${APP_EMAIL}' bash /tmp/yopass-install.sh
   "
 else
   lxc-attach -n "$CTID" -- bash -c "
-    curl -fsSL '${INSTALL_URL}' -o /tmp/yopass-install.sh 2>/dev/null
+    curl -fsSL '${INSTALL_URL}' -o /tmp/yopass-install.sh
     INSTALL_MODE='${INSTALL_MODE}' bash /tmp/yopass-install.sh
   "
 fi
