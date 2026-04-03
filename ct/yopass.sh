@@ -28,28 +28,32 @@ color
 catch_errors
 
 function update_script() {
+  CTID=$(pct list | awk '/yopass/{print $1}' | head -1)
+  [[ -z "$CTID" ]] && msg_error "No Yopass container found!"
   header_info
-  if [[ ! -f /usr/local/bin/yopass-server ]]; then
-    msg_error "No ${APP} installation found!"
+  if ! pct exec "$CTID" -- test -f /usr/local/bin/yopass-server; then
+    msg_error "No ${APP} installation found in container ${CTID}!"
     exit
   fi
 
   msg_info "Updating Yopass binary"
-  wget -qO /usr/local/bin/yopass-server "${RAW_URL}/bin/yopass-server"
-  chmod +x /usr/local/bin/yopass-server
+  pct exec "$CTID" -- wget -qO /usr/local/bin/yopass-server "${RAW_URL}/bin/yopass-server"
+  pct exec "$CTID" -- chmod +x /usr/local/bin/yopass-server
   msg_ok "Binary updated"
 
   msg_info "Updating frontend assets"
-  mkdir -p /tmp/yopass_repo
-  curl -fsSL "https://github.com/${GITHUB_USER}/${REPO}/archive/refs/heads/main.tar.gz" \
-    | tar -xz -C /tmp/yopass_repo --strip-components=1
-  cp -r /tmp/yopass_repo/public/* /var/www/yopass/
-  rm -rf /tmp/yopass_repo
-  chown -R www-data:www-data /var/www/yopass
+  pct exec "$CTID" -- bash -c "
+    mkdir -p /tmp/yopass_repo
+    curl -fsSL 'https://github.com/${GITHUB_USER}/${REPO}/archive/refs/heads/main.tar.gz' \
+      | tar -xz -C /tmp/yopass_repo --strip-components=1
+    cp -r /tmp/yopass_repo/public/* /var/www/yopass/
+    rm -rf /tmp/yopass_repo
+    chown -R www-data:www-data /var/www/yopass
+  "
   msg_ok "Frontend assets updated"
 
   msg_info "Restarting Yopass service"
-  systemctl restart yopass
+  pct exec "$CTID" -- systemctl restart yopass
   msg_ok "Yopass restarted successfully"
   exit
 }
