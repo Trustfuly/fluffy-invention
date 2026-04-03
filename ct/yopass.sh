@@ -20,14 +20,16 @@ REPO="fluffy-invention"
 RAW_URL="https://raw.githubusercontent.com/${GITHUB_USER}/${REPO}/main"
 INSTALL_URL="${RAW_URL}/install/yopass-install.sh"
 
-# --- Function to update existing containers with fix for MIME type error ---
+# --- Function to update existing containers with Styled UI ---
 function update_script() {
+  # Disable Proxmox Helper Scripts cleanup traps for safety
   trap - EXIT
   trap - ERR
   
   header_info
   msg_info "Searching for containers with 'yopass' tag..."
   
+  # Find Container IDs safely using awk
   local UPD_CTIDS=$(grep -lE "^tags:.*yopass" /etc/pve/lxc/[0-9]*.conf 2>/dev/null | awk -F'/' '{print $NF}' | sed 's/\.conf//' || true)
 
   if [[ -z "$UPD_CTIDS" ]]; then
@@ -43,7 +45,7 @@ function update_script() {
       continue
     fi
 
-    # ─── Execute Update Inside Container ────────────────────────────────────
+    # ─── Execute Update Inside Container (Styled & Robust) ──────────────────
     pct exec "$CTID" -- bash -c "
         set -euo pipefail
         
@@ -53,9 +55,9 @@ function update_script() {
         R='\033[0;31m'
         NC='\033[0m'
 
-        echo -e \"  \${Y}[INFO]\${NC} Checking installation...\"
+        echo -e \"  \${Y}[INFO]\${NC} Checking current installation...\"
         if [[ ! -f /usr/local/bin/yopass-server ]]; then
-            echo -e \"  \${R}[ERROR]\${NC} Yopass is not installed in this container.\"
+            echo -e \"  \${R}[ERROR]\${NC} Yopass binary not found. Is it installed correctly?\"
             exit 1
         fi
 
@@ -65,30 +67,28 @@ function update_script() {
         echo \"  ╚══════════════════════════════════════════════════════════╝\"
         echo \"\"
 
-        echo -e \"  \${Y}[INFO]\${NC} Stopping Yopass service\"
+        echo -e \"  \${Y}[1/4]\${NC} Stopping service & clearing old assets...\"
         systemctl stop yopass || true
+        # Deep clean to prevent MIME type errors (TypeError: text/html)
+        rm -rf /var/www/yopass/*
 
-        echo -e \"  \${Y}[INFO]\${NC} Updating Yopass binary\"
+        echo -e \"  \${Y}[2/4]\${NC} Updating Yopass binary...\"
         wget -qO /usr/local/bin/yopass-server \"${RAW_URL}/bin/yopass-server\"
         chmod +x /usr/local/bin/yopass-server
 
-        echo -e \"  \${Y}[INFO]\${NC} Updating frontend assets\"
-        mkdir -p /tmp/yopass_repo
-        # Download and extract the repository
+        echo -e \"  \${Y}[3/4]\${NC} Deploying new frontend assets...\"
+        mkdir -p /tmp/yopass_update
         curl -fsSL \"https://github.com/${GITHUB_USER}/${REPO}/archive/refs/heads/main.tar.gz\" \
-          | tar -xz -C /tmp/yopass_repo --strip-components=1
+          | tar -xz -C /tmp/yopass_update --strip-components=1
         
-        # CLEANUP FIX: Delete EVERYTHING in the web root to avoid MIME type errors
-        # This ensures no old hashed JS files remain.
-        rm -rf /var/www/yopass/*
+        # Copy everything from public to web root
+        cp -a /tmp/yopass_update/public/. /var/www/yopass/
         
-        # Copy all contents from the public folder of your repo
-        cp -r /tmp/yopass_repo/public/* /var/www/yopass/
-        
-        rm -rf /tmp/yopass_repo
+        rm -rf /tmp/yopass_update
         chown -R www-data:www-data /var/www/yopass
+        chmod -R 755 /var/www/yopass
 
-        echo -e \"  \${Y}[INFO]\${NC} Starting Yopass service\"
+        echo -e \"  \${Y}[4/4]\${NC} Restarting services...\"
         systemctl start yopass
         systemctl restart nginx
 
@@ -96,12 +96,14 @@ function update_script() {
         echo \"\"
         echo \"  ╔══════════════════════════════════════════════════════════╗\"
         echo \"  ║          ✅  Yopass updated successfully!                 ║\"
+        echo \"  ╠══════════════════════════════════════════════════════════╣\"
+        printf \"  ║   🌐  URL : https://%-38s ║\\n\" \"\${IP}\"
         echo \"  ╚══════════════════════════════════════════════════════════╝\"
         echo \"\"
     "
   done
   
-  msg_ok "All updates finished."
+  msg_ok "All update tasks completed."
   exit 0
 }
 
