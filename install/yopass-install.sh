@@ -195,7 +195,7 @@ EOF
     echo ""
     echo ""
     echo "    ╔══════════════════════════════════════════════════════════╗"
-    echo "    ║          ✅  Yopass installed successfully!               ║"
+    echo "    ║          ✅  Yopass installed successfully!              ║"
     echo "    ╚══════════════════════════════════════════════════════════╝"
     echo "        🌐  URL      : https://${IP}                           "
     echo "        🔁  Proxy to : https://${IP}                           "
