@@ -15,7 +15,6 @@ var_disk="2"
 var_os="debian"
 var_version="12"
 var_unprivileged="1"
-var_install="yopass"
 
 INSTALL_URL="https://raw.githubusercontent.com/Trustfuly/fluffy-invention/main/install/yopass-install.sh"
 
