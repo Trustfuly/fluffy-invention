@@ -15,34 +15,6 @@ msg_info()  { echo -e "\e[34m[INFO]\e[0m $1"; }
 msg_ok()    { echo -e "\e[32m[OK]\e[0m   $1"; }
 msg_error() { echo -e "\e[31m[ERROR]\e[0m $1"; exit 1; }
 
-# Check if the binary already exists OR the update flag is passed
-if [[ "${UPDATE_ONLY:-no}" == "yes" ]]; then
-    msg_info "Existing installation detected. Performing update..."
-    
-    systemctl stop yopass || true
-
-    # Update Yopass binary
-    msg_info "Updating Yopass binary"
-    wget -qO /usr/local/bin/yopass-server "${RAW_URL}/bin/yopass-server"
-    chmod +x /usr/local/bin/yopass-server
-
-    # Update frontend assets
-    msg_info "Updating frontend assets"
-    mkdir -p /tmp/yopass_repo
-    curl -fsSL "https://github.com/${GITHUB_USER}/${REPO}/archive/refs/heads/main.tar.gz" \
-      | tar -xz -C /tmp/yopass_repo --strip-components=1
-    
-    rm -rf /var/www/yopass/assets/*
-    cp -r /tmp/yopass_repo/public/* /var/www/yopass/
-    rm -rf /tmp/yopass_repo
-    chown -R www-data:www-data /var/www/yopass
-
-    systemctl start yopass
-    
-    msg_ok "Update finished!"
-    exit 0 
-fi
-
 # INSTALL_MODE is passed as env var from ct/yopass.sh
 # If running standalone (direct call), ask interactively
 if [[ -z "${INSTALL_MODE:-}" ]]; then
