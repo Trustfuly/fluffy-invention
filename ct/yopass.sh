@@ -15,6 +15,7 @@ var_disk="2"
 var_os="debian"
 var_version="12"
 var_unprivileged="1"
+var_install="yopass"
 
 INSTALL_URL="https://raw.githubusercontent.com/Trustfuly/fluffy-invention/main/install/yopass-install.sh"
 
@@ -35,7 +36,7 @@ function update_script() {
 }
 
 start
-build_container 2>&1 | grep -v "curl: (22)"
+build_container
 pct exec "$CTID" -- mkdir -p /etc/systemd/system/container-getty@1.service.d
 pct exec "$CTID" -- bash -c "printf '[Service]\nExecStart=\nExecStart=-/sbin/agetty --autologin root --noclear tty1\n' > /etc/systemd/system/container-getty@1.service.d/autologin.conf"
 pct exec "$CTID" -- passwd -d root >/dev/null 2>&1
