@@ -39,8 +39,7 @@ start
 build_container
 pct exec "$CTID" -- mkdir -p /etc/systemd/system/container-getty@1.service.d
 pct exec "$CTID" -- bash -c "printf '[Service]\nExecStart=\nExecStart=-/sbin/agetty --autologin root --noclear tty1\n' > /etc/systemd/system/container-getty@1.service.d/autologin.conf"
-#pct exec "$CTID" -- passwd -d root 2>/dev/null
-pct exec "$CTID" -- passwd -d root >/dev/null 2>&1
+pct exec "$CTID" -- passwd -d root 2>/dev/null
 pct exec "$CTID" -- systemctl daemon-reload
 pct exec "$CTID" -- systemctl restart container-getty@1
 
