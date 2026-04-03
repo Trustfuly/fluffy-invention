@@ -16,6 +16,9 @@ var_os="debian"
 var_version="12"
 var_unprivileged="1"
 
+GITHUB_USER="Trustfuly"
+REPO="fluffy-invention"
+RAW_URL="https://raw.githubusercontent.com/${GITHUB_USER}/${REPO}/main"
 INSTALL_URL="https://raw.githubusercontent.com/Trustfuly/fluffy-invention/main/install/yopass-install.sh"
 
 header_info "$APP"
@@ -30,7 +33,24 @@ function update_script() {
     msg_error "No ${APP} installation found!"
     exit
   fi
-  msg_info "Re-run the installer to update."
+
+  msg_info "Updating Yopass binary"
+  wget -qO /usr/local/bin/yopass-server "${RAW_URL}/bin/yopass-server"
+  chmod +x /usr/local/bin/yopass-server
+  msg_ok "Binary updated"
+
+  msg_info "Updating frontend assets"
+  mkdir -p /tmp/yopass_repo
+  curl -fsSL "https://github.com/${GITHUB_USER}/${REPO}/archive/refs/heads/main.tar.gz" \
+    | tar -xz -C /tmp/yopass_repo --strip-components=1
+  cp -r /tmp/yopass_repo/public/* /var/www/yopass/
+  rm -rf /tmp/yopass_repo
+  chown -R www-data:www-data /var/www/yopass
+  msg_ok "Frontend assets updated"
+
+  msg_info "Restarting Yopass service"
+  systemctl restart yopass
+  msg_ok "Yopass restarted successfully"
   exit
 }
 
