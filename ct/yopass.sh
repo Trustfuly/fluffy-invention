@@ -61,8 +61,11 @@ msg_info "Starting Yopass installation (mode: ${INSTALL_MODE})"
 
 # Download install script into container and run it with INSTALL_MODE env var
 if [[ "$INSTALL_MODE" == "1" ]]; then
-APP_DOMAIN=$(whiptail --inputbox "Enter domain (e.g. secrets.example.com): " 8 60 3>&1 1>&2 2>&3)
-APP_EMAIL=$(whiptail --inputbox "Enter email for Let's Encrypt notices: " 8 60 3>&1 1>&2 2>&3)
+  set +e
+  APP_DOMAIN=$(whiptail --inputbox "Enter domain (e.g. secrets.example.com)" 8 60 3>&1 1>&2 2>&3)
+  APP_EMAIL=$(whiptail --inputbox "Enter email for Let's Encrypt notices" 8 60 3>&1 1>&2 2>&3)
+  set -e
+  [[ -z "$APP_DOMAIN" || -z "$APP_EMAIL" ]] && msg_error "Domain and email are required."
 
   lxc-attach -n "$CTID" -- bash -c "
     curl -fsSL '${INSTALL_URL}' -o /tmp/yopass-install.sh
