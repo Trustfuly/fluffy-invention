@@ -186,9 +186,9 @@ EOF
     ln -sf /etc/nginx/sites-available/yopass /etc/nginx/sites-enabled/yopass
     rm -f /etc/nginx/sites-enabled/default
     nginx -t && systemctl restart nginx
- 
+
     IP=$(hostname -I | awk '{print $1}')
- 
+
     clear
     echo -e "\e[32m"
     echo ""
