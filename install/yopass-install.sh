@@ -19,12 +19,12 @@ msg_error() { echo -e "\e[31m[ERROR]\e[0m $1"; exit 1; }
 # If running standalone (direct call), ask interactively
 if [[ -z "${INSTALL_MODE:-}" ]]; then
   clear
-  echo "==========================================="
-  echo "   Yopass Installation Mode Selection      "
-  echo "==========================================="
-  echo "1) Public (Standalone with Certbot/SSL)"
-  echo "2) Behind Proxy (Nginx Proxy Manager / NPM)"
-  echo "==========================================="
+  echo " ╔═══════════════════════════════════════════════╗"
+  echo " ║      Yopass Installation Mode Selection       ║"
+  echo " ╠═══════════════════════════════════════════════╣"
+  echo " ║  1) Public (Standalone with Certbot/SSL)      ║"
+  echo " ║  2) Behind Proxy (Nginx Proxy Manager / NPM)  ║"
+  echo " ╚═══════════════════════════════════════════════╝"
   printf "Select option [1-2]: "
   read -r INSTALL_MODE
 fi
@@ -207,15 +207,12 @@ EOF
     echo ""
     echo ""
     echo "    ╔══════════════════════════════════════════════════════════╗"
-    echo "    ║          ✅  Yopass installed successfully!               ║"
+    echo "    ║          ✅  Yopass installed successfully!              ║"
     echo "    ╚══════════════════════════════════════════════════════════╝"
     echo "        🌐  URL      : https://${IP}                           "
     echo "        🔁  Proxy to : https://${IP}                           "
     echo "        🔒  TLS      : handled by your reverse proxy           "
     echo "    ╔══════════════════════════════════════════════════════════╗"
-    echo "    ║              Container login: root                       ║"
-    echo "    ║              Container password: blank                   ║"
-    echo "    ╠══════════════════════════════════════════════════════════╣"
     echo "    ║   Service management:                                    ║"
     echo "    ║     systemctl status yopass                              ║"
     echo "    ║     systemctl restart yopass                             ║"
