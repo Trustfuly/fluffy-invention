@@ -43,6 +43,7 @@ msg_info "Updating frontend assets"
 mkdir -p /tmp/yopass_repo
 curl -fsSL "https://github.com/${GITHUB_USER}/${REPO}/archive/refs/heads/main.tar.gz" \
   | tar -xz -C /tmp/yopass_repo --strip-components=1
+rm -r /var/www/yopass/assets/*
 cp -r /tmp/yopass_repo/public/* /var/www/yopass/
 rm -rf /tmp/yopass_repo
 chown -R www-data:www-data /var/www/yopass
