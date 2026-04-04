@@ -100,9 +100,9 @@ fluffy-invention/
 │   ├── assets/
 │   ├── index.html
 │   └── ...
-├── build.sh                  ← Rebuild frontend + binary from latest yopass source
-├── update.sh                 ← Update existing container
-└── README.md
+├── LICENSE                   ← MIT License
+├── README.md
+└── update.sh                 ← Update existing container
 ```
 
 ---
