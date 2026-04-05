@@ -303,7 +303,7 @@ echo -e "${GREEN}"
 echo "  ╔══════════════════════════════════════════════════════════╗"
 echo "  ║          ✅  Build completed successfully!               ║"
 echo "  ╠══════════════════════════════════════════════════════════╣"
-echo "  ║   📦  Yopass version : %-34s ║\n" "${RELEASE}"           ║
+echo "  ║   📦  Yopass version : ${RELEASE}                        ║"
 echo "  ║   🇺🇦  Language       : Ukrainian (default) + all others  ║"
 echo "  ║   ✅  Added          : Ukrainian (uk)                    ║"
 echo "  ╠══════════════════════════════════════════════════════════╣"
