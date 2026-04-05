@@ -2,7 +2,7 @@
 
 > Install [Yopass](https://github.com/jhaals/yopass) as a native LXC container on Proxmox VE — no Docker required.  
 > Built in the style of [community-scripts/ProxmoxVE](https://github.com/community-scripts/ProxmoxVE).  
-> Includes Ukrainian language support (Russian removed).
+> Includes Ukrainian language support.
 
 ---
 
@@ -102,6 +102,7 @@ fluffy-invention/
 │   └── ...
 ├── LICENSE                   ← MIT License
 ├── README.md
+├── build.sh                  ← Rebuild frontend + binary from latest yopass 
 └── update.sh                 ← Update existing container
 ```
 
