@@ -317,8 +317,13 @@ echo -e "\033[0m"
 if [[ "$PUSH" == "true" ]]; then
   msg_info "Committing and pushing to GitHub"
   cd "$SCRIPT_DIR"
-  git add public/ bin/ build.sh
+# ─── Gem update ver. ──────────────────────────────────────────────────────────
+  SCRIPT_DATE=$(date -r build.sh "+%Y-%m-%d")
+  git add public/ bin/
   git commit -m "build: update to yopass ${RELEASE} with Ukrainian UI"
+# ─── Gem update ver. ──────────────────────────────────────────────────────────       
+  git add build.sh 
+  git commit -m "chore: update build script (rev. ${SCRIPT_DATE})"
   git push origin main
   msg_ok "Pushed to github.com/${REPO_USER}/${REPO_NAME}"
 fi
