@@ -24,6 +24,9 @@
 #    bash build.sh --push    # also commits and pushes to GitHub
 # ─────────────────────────────────────────────────────────────────────────────
 
+# ─── Script Versioning ───────────────────────────────────────────────────────
+SCRIPT_VER="1.1.15"
+
 set -euo pipefail
 
 REPO_USER="Trustfuly"
@@ -301,9 +304,10 @@ msg_ok "yopass-server binary built and saved to bin/"
 echo ""
 echo -e "${GREEN}"
 echo "  ╔══════════════════════════════════════════════════════════╗"
-echo "  ║          ✅  Build completed successfully!               ║"
+echo "  ║            ✅  Build completed successfully!              ║"
 echo "  ╠══════════════════════════════════════════════════════════╣"
-echo "  ║   📦  Yopass version : ${RELEASE}                        ║"
+printf "  ║   📦  Yopass version : %-33s ║\n" "${RELEASE}"
+printf "  ║   🛠️   Script version : %-33s ║\n" "${SCRIPT_VER}"
 echo "  ║   🇺🇦  Language       : Ukrainian (default) + all others  ║"
 echo "  ║   ✅  Added          : Ukrainian (uk)                    ║"
 echo "  ╠══════════════════════════════════════════════════════════╣"
@@ -317,9 +321,6 @@ echo -e "\033[0m"
 if [[ "$PUSH" == "true" ]]; then
   msg_info "Committing and pushing to GitHub"
   cd "$SCRIPT_DIR"
-  
-  # Get script version based on file modification date
-  SCRIPT_VER=$(date -r build.sh "+%Y-%m-%d")
 
   # Commit application updates
   git add public/ bin/
