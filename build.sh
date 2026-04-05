@@ -328,8 +328,15 @@ if [[ "$PUSH" == "true" ]]; then
 
   # Commit build script separately with date-version
   git add build.sh
-  git tag -a "v${SCRIPT_VER}" -m "chore: update build.sh v.${SCRIPT_VER}" || true
+  git commit -m "chore: update build.sh v.${SCRIPT_VER}" || true
 
-  git push origin main --force
+  # Create a Tag
+  # -a: annotated tag, -m: message, -f: force update if tag exists
+  msg_info "Creating tag v${SCRIPT_VER}"
+  git tag -a "v${SCRIPT_VER}" -m "Release version ${SCRIPT_VER}" -f
+
+# Push commits AND tags
+  git push origin main --follow-tags
+
   msg_ok "Pushed to github.com/${REPO_USER}/${REPO_NAME} with tag v${SCRIPT_VER}"
 fi
