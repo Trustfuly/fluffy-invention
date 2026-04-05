@@ -301,11 +301,11 @@ msg_ok "yopass-server binary built and saved to bin/"
 echo ""
 echo -e "${GREEN}"
 echo "  ╔══════════════════════════════════════════════════════════╗"
-echo "  ║          ✅  Build completed successfully!               ║"
+echo "  ║          ✅  Build completed successfully!                ║"
 echo "  ╠══════════════════════════════════════════════════════════╣"
-printf "  ║   📦  Yopass version : %-34s ║\n" "${RELEASE}"           ║
+printf "  ║   📦  Yopass version : %-34s ║\n" "${RELEASE}"            ║
 echo "  ║   🇺🇦  Language       : Ukrainian (default) + all others  ║"
-echo "  ║   ✅  Added          : Ukrainian (uk)                    ║"
+echo "  ║   ✅  Added          : Ukrainian (uk)                     ║"
 echo "  ╠══════════════════════════════════════════════════════════╣"
 echo "  ║   Output:                                                ║"
 echo "  ║     public/   ← frontend assets                          ║"
@@ -329,6 +329,6 @@ if [[ "$PUSH" == "true" ]]; then
   git add build.sh
   git commit -m "chore: update build.sh v.${SCRIPT_VER}" || true
 
-  git push origin main
+  git push origin main --force
   msg_ok "Pushed to github.com/${REPO_USER}/${REPO_NAME}"
 fi
