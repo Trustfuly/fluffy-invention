@@ -276,10 +276,16 @@ LANG_SWITCHER="$WEBSITE_DIR/src/shared/components/LanguageSwitcher.tsx"
 sed -i "s/{ code: 'en', name: 'English' },/{ code: 'en', name: 'English' },\n    { code: 'uk', name: 'Українська' },/" "$LANG_SWITCHER"
 msg_ok "LanguageSwitcher.tsx patched (uk added)"
 
-# ─── Patch App.tsx — fix footer container width ───────────────────────────────
+# ─── Patch App.tsx — fix container width ─────────────────────────────────────
 msg_info "Patching App.tsx"
+sed -i 's/w-full max-w-3xl mx-auto/w-full max-w-2xl mx-auto/' "$BUILD_DIR/yopass/website/src/app/App.tsx"
 sed -i 's/container mx-auto px-4 py-8/max-w-3xl mx-auto px-4 py-8/' "$BUILD_DIR/yopass/website/src/app/App.tsx"
 msg_ok "App.tsx patched"
+
+# ─── Patch CSS — limit container max-width ───────────────────────────────────
+msg_info "Patching CSS"
+find "$WEBSITE_DIR/src" -name "*.css" | head -1 | xargs -I{} bash -c 'echo "@layer base { .container { max-width: 48rem; } }" >> {}'
+msg_ok "CSS patched"
 
 # ─── Build frontend ───────────────────────────────────────────────────────────
 msg_info "Installing npm dependencies"
