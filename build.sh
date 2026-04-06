@@ -25,7 +25,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
 
 # ─── Script Versioning ───────────────────────────────────────────────────────
-SCRIPT_VER="1.1.15"
+SCRIPT_VER="1.1.16"
 
 set -euo pipefail
 
@@ -275,6 +275,12 @@ msg_info "Patching LanguageSwitcher.tsx"
 LANG_SWITCHER="$WEBSITE_DIR/src/shared/components/LanguageSwitcher.tsx"
 sed -i "s/{ code: 'en', name: 'English' },/{ code: 'en', name: 'English' },\n    { code: 'uk', name: 'Українська' },/" "$LANG_SWITCHER"
 msg_ok "LanguageSwitcher.tsx patched (uk added)"
+
+# ─── Patch App.tsx — fix max-w-3xl for Tailwind 4 ───────────────────────────
+msg_info "Patching App.tsx"
+APP_TSX="$WEBSITE_DIR/src/app/App.tsx"
+sed -i 's/max-w-3xl/max-w-2xl/' "$APP_TSX"
+msg_ok "App.tsx patched (max-w-3xl → max-w-2xl)"
 
 # ─── Build frontend ───────────────────────────────────────────────────────────
 msg_info "Installing npm dependencies"
