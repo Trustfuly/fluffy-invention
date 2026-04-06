@@ -284,7 +284,7 @@ msg_ok "App.tsx patched"
 
 # ─── Patch CSS — limit container max-width ───────────────────────────────────
 msg_info "Patching CSS"
-find "$WEBSITE_DIR/src" -name "*.css" | head -1 | xargs -I{} bash -c 'echo "@layer base { .container { max-width: 48rem !important; } }" >> {}'
+find "$WEBSITE_DIR/src" -name "*.css" | head -1 | xargs -I{} bash -c 'echo "@layer base { .container { max-width: 64rem !important; } }" >> {}'
 msg_ok "CSS patched"
 
 # ─── Build frontend ───────────────────────────────────────────────────────────
