@@ -25,7 +25,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
 
 # ─── Script Versioning ───────────────────────────────────────────────────────
-SCRIPT_VER="1.1.16"
+SCRIPT_VER="1.2.1"
 
 set -euo pipefail
 
@@ -281,6 +281,112 @@ msg_info "Patching App.tsx"
 sed -i 's/w-full max-w-3xl mx-auto/w-full max-w-2xl mx-auto/' "$BUILD_DIR/yopass/website/src/app/App.tsx"
 sed -i 's/container mx-auto px-4 py-8/max-w-3xl mx-auto px-4 py-8/' "$BUILD_DIR/yopass/website/src/app/App.tsx"
 msg_ok "App.tsx patched"
+
+# ─── Patch Result.tsx — clipboard warning with expiry + oneTime ──────────────
+msg_info "Patching Result.tsx — clipboard warning"
+export WEBSITE_DIR LOCALES_DIR
+node - <<'NODEEOF'
+const fs = require('fs');
+
+// ── 1. Result.tsx ─────────────────────────────────────────────────────────────
+const resultPath = process.env.WEBSITE_DIR + '/src/features/display-secret/Result.tsx';
+let result = fs.readFileSync(resultPath, 'utf8');
+
+result = result.replace(
+  'interface ResultProps {\n  password: string;\n  uuid: string;\n  prefix: string;\n  customPassword: boolean;\n  oneTime: boolean;\n}',
+  'interface ResultProps {\n  password: string;\n  uuid: string;\n  prefix: string;\n  customPassword: boolean;\n  oneTime: boolean;\n  expiration: number;\n}'
+);
+
+result = result.replace(
+  'function Result({\n  password,\n  uuid,\n  prefix,\n  customPassword,\n  oneTime,\n}: ResultProps)',
+  'function Result({\n  password,\n  uuid,\n  prefix,\n  customPassword,\n  oneTime,\n  expiration,\n}: ResultProps)'
+);
+
+result = result.replace(
+  `  async function copyToClipboard(\n    text: string,\n    setCopied: (value: boolean) => void,\n  ) {\n    try {\n      await navigator.clipboard.writeText(text);\n      setCopied(true);\n      setTimeout(() => setCopied(false), 1500);\n    } catch {\n      // noop\n    }\n  }`,
+  `  function formatExpiry(seconds: number, t: (key: string) => string): string {\n    if (seconds <= 3600) return t('expiration.optionOneHourLabel');\n    if (seconds <= 86400) return t('expiration.optionOneDayLabel');\n    return t('expiration.optionOneWeekLabel');\n  }\n\n  async function copyToClipboard(\n    text: string,\n    setCopied: (value: boolean) => void,\n    isLink = false,\n  ) {\n    try {\n      let content = text;\n      if (isLink) {\n        const expiryLabel = formatExpiry(expiration, t);\n        const modeLabel = oneTime\n          ? t('clipboard.modeOneTime')\n          : t('clipboard.modeMultiple');\n        content = t('clipboard.warning', {\n          expiry: expiryLabel,\n          mode: modeLabel,\n          url: text,\n        });\n      }\n      await navigator.clipboard.writeText(content);\n      setCopied(true);\n      setTimeout(() => setCopied(false), 1500);\n    } catch {\n      // noop\n    }\n  }`
+);
+
+result = result.replace(
+  `onClick={() => copyToClipboard(oneClickLink, setCopiedOneClick)}`,
+  `onClick={() => copyToClipboard(oneClickLink, setCopiedOneClick, true)}`
+);
+result = result.replace(
+  `onClick={() => copyToClipboard(shortLink, setCopiedShortLink)}`,
+  `onClick={() => copyToClipboard(shortLink, setCopiedShortLink, true)}`
+);
+
+fs.writeFileSync(resultPath, result);
+console.log('  Result.tsx patched');
+
+// ── 2. CreateSecret.tsx ───────────────────────────────────────────────────────
+const createPath = process.env.WEBSITE_DIR + '/src/features/CreateSecret.tsx';
+let create = fs.readFileSync(createPath, 'utf8');
+
+create = create.replace(
+  `  const [requireAuth, setRequireAuth] = useState(false);`,
+  `  const [requireAuth, setRequireAuth] = useState(false);\n  const [expiration, setExpiration] = useState<number>(config?.DEFAULT_EXPIRY ?? 3600);`
+);
+
+create = create.replace(
+  `    const pw = getPassword();`,
+  `    const pw = getPassword();\n    setExpiration(parseInt(form.expiration));`
+);
+
+create = create.replace(
+  `        oneTime={config?.FORCE_ONETIME_SECRETS || oneTime}\n      />`,
+  `        oneTime={config?.FORCE_ONETIME_SECRETS || oneTime}\n        expiration={expiration}\n      />`
+);
+
+fs.writeFileSync(createPath, create);
+console.log('  CreateSecret.tsx patched');
+
+// ── 3. StreamingUpload.tsx ────────────────────────────────────────────────────
+const uploadPath = process.env.WEBSITE_DIR + '/src/features/StreamingUpload.tsx';
+let upload = fs.readFileSync(uploadPath, 'utf8');
+
+upload = upload.replace(
+  `  const [requireAuth, setRequireAuth] = useState(false);`,
+  `  const [requireAuth, setRequireAuth] = useState(false);\n  const [expiration, setExpiration] = useState<number>(config?.DEFAULT_EXPIRY ?? 3600);`
+);
+
+upload = upload.replace(
+  `      const { data, status } = await uploadStreamingFile(`,
+  `      setExpiration(parseInt(form.expiration));\n      const { data, status } = await uploadStreamingFile(`
+);
+
+upload = upload.replace(
+  `        oneTime={config?.FORCE_ONETIME_SECRETS || oneTime}\n      />\n    );\n  }\n\n  return (\n    <>\n`,
+  `        oneTime={config?.FORCE_ONETIME_SECRETS || oneTime}\n        expiration={expiration}\n      />\n    );\n  }\n\n  return (\n    <>\n`
+);
+
+fs.writeFileSync(uploadPath, upload);
+console.log('  StreamingUpload.tsx patched');
+
+// ── 4. uk.json ───────────────────────────────────────────────────────────────
+const ukPath = process.env.LOCALES_DIR + '/uk.json';
+const uk = JSON.parse(fs.readFileSync(ukPath, 'utf8'));
+uk.clipboard = {
+  warning: '⚠️ Це секретне посилання!\nТермін дії: {{expiry}}\nРежим: {{mode}}\nПісля першого відкриття посилання буде знищено.\n\n🔗 {{url}}',
+  modeOneTime: 'Одноразове (після першого відкриття — знищується)',
+  modeMultiple: 'Багаторазове',
+};
+fs.writeFileSync(ukPath, JSON.stringify(uk, null, 2));
+console.log('  uk.json patched');
+
+// ── 5. en.json ───────────────────────────────────────────────────────────────
+const enPath = process.env.LOCALES_DIR + '/en.json';
+const en = JSON.parse(fs.readFileSync(enPath, 'utf8'));
+en.clipboard = {
+  warning: '⚠️ Secret link!\nExpires in: {{expiry}}\nMode: {{mode}}\nThis link will be destroyed after the first opening.\n\n🔗 {{url}}',
+  modeOneTime: 'One-time (destroyed after first open)',
+  modeMultiple: 'Multiple opens allowed',
+};
+fs.writeFileSync(enPath, JSON.stringify(en, null, 2));
+console.log('  en.json patched');
+
+NODEEOF
+msg_ok "Clipboard warning patch applied"
 
 # ─── Patch CSS — limit container max-width ───────────────────────────────────
 msg_info "Patching CSS"
