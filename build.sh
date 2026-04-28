@@ -323,16 +323,19 @@ console.log('  Result.tsx patched');
 const createPath = process.env.WEBSITE_DIR + '/src/features/CreateSecret.tsx';
 let create = fs.readFileSync(createPath, 'utf8');
 
+// Inject expiration state after the last useState declaration
 create = create.replace(
-  `  const [requireAuth, setRequireAuth] = useState(false);`,
-  `  const [requireAuth, setRequireAuth] = useState(false);\n  const [expiration, setExpiration] = useState<number>(config?.DEFAULT_EXPIRY ?? 3600);`
+  /(\bconst \[[\w]+, set[\w]+\] = useState[^;]+;\n)(\n\s+const \{)/,
+  '$1  const [expiration, setExpiration] = useState<number>(3600);\n$2'
 );
 
+// Capture expiration before postSecret
 create = create.replace(
   `    const pw = getPassword();`,
   `    const pw = getPassword();\n    setExpiration(parseInt(form.expiration));`
 );
 
+// Pass expiration to Result
 create = create.replace(
   `        oneTime={config?.FORCE_ONETIME_SECRETS || oneTime}\n      />`,
   `        oneTime={config?.FORCE_ONETIME_SECRETS || oneTime}\n        expiration={expiration}\n      />`
@@ -341,27 +344,35 @@ create = create.replace(
 fs.writeFileSync(createPath, create);
 console.log('  CreateSecret.tsx patched');
 
-// ── 3. StreamingUpload.tsx ────────────────────────────────────────────────────
-const uploadPath = process.env.WEBSITE_DIR + '/src/features/StreamingUpload.tsx';
-let upload = fs.readFileSync(uploadPath, 'utf8');
+// ── 3. Upload.tsx або StreamingUpload.tsx ─────────────────────────────────────
+const uploadCandidates = [
+  process.env.WEBSITE_DIR + '/src/features/Upload.tsx',
+  process.env.WEBSITE_DIR + '/src/features/StreamingUpload.tsx',
+];
+const uploadPath = uploadCandidates.find(p => fs.existsSync(p));
+if (uploadPath) {
+  let upload = fs.readFileSync(uploadPath, 'utf8');
 
-upload = upload.replace(
-  `  const [requireAuth, setRequireAuth] = useState(false);`,
-  `  const [requireAuth, setRequireAuth] = useState(false);\n  const [expiration, setExpiration] = useState<number>(config?.DEFAULT_EXPIRY ?? 3600);`
-);
+  upload = upload.replace(
+    /(\bconst \[[\w]+, set[\w]+\] = useState[^;]+;\n)(\n\s+const \{)/,
+    '$1  const [expiration, setExpiration] = useState<number>(3600);\n$2'
+  );
 
-upload = upload.replace(
-  `      const { data, status } = await uploadStreamingFile(`,
-  `      setExpiration(parseInt(form.expiration));\n      const { data, status } = await uploadStreamingFile(`
-);
+  upload = upload.replace(
+    `    const { data: res, status } = await uploadFile(`,
+    `    setExpiration(parseInt(form.expiration));\n    const { data: res, status } = await uploadFile(`
+  );
 
-upload = upload.replace(
-  `        oneTime={config?.FORCE_ONETIME_SECRETS || oneTime}\n      />\n    );\n  }\n\n  return (\n    <>\n`,
-  `        oneTime={config?.FORCE_ONETIME_SECRETS || oneTime}\n        expiration={expiration}\n      />\n    );\n  }\n\n  return (\n    <>\n`
-);
+  upload = upload.replace(
+    `        oneTime={config?.FORCE_ONETIME_SECRETS || oneTime}\n      />\n    );\n  }\n\n  return (\n    <>\n`,
+    `        oneTime={config?.FORCE_ONETIME_SECRETS || oneTime}\n        expiration={expiration}\n      />\n    );\n  }\n\n  return (\n    <>\n`
+  );
 
-fs.writeFileSync(uploadPath, upload);
-console.log('  StreamingUpload.tsx patched');
+  fs.writeFileSync(uploadPath, upload);
+  console.log(`  ${uploadPath.split('/').pop()} patched`);
+} else {
+  console.log('  Upload.tsx / StreamingUpload.tsx not found, skipping');
+}
 
 // ── 4. uk.json ───────────────────────────────────────────────────────────────
 const ukPath = process.env.LOCALES_DIR + '/uk.json';
