@@ -378,7 +378,7 @@ if (uploadPath) {
 const ukPath = process.env.LOCALES_DIR + '/uk.json';
 const uk = JSON.parse(fs.readFileSync(ukPath, 'utf8'));
 uk.clipboard = {
-  warning: '⚠️ Це секретне посилання!\nТермін дії: {{expiry}}\nРежим: {{mode}}\nПісля першого відкриття посилання буде знищено.\n\n🔗 {{url}}',
+  warning: '⚠️ Це секретне посилання!\nТермін дії: {{expiry}}\nРежим: {{mode}}\n\n🔗 {{url}}',
   modeOneTime: 'Одноразове (після першого відкриття — знищується)',
   modeMultiple: 'Багаторазове',
 };
@@ -389,7 +389,7 @@ console.log('  uk.json patched');
 const enPath = process.env.LOCALES_DIR + '/en.json';
 const en = JSON.parse(fs.readFileSync(enPath, 'utf8'));
 en.clipboard = {
-  warning: '⚠️ Secret link!\nExpires in: {{expiry}}\nMode: {{mode}}\nThis link will be destroyed after the first opening.\n\n🔗 {{url}}',
+  warning: '⚠️ Secret link!\nExpires in: {{expiry}}\nMode: {{mode}}\n\n🔗 {{url}}',
   modeOneTime: 'One-time (destroyed after first open)',
   modeMultiple: 'Multiple opens allowed',
 };
